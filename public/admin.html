@@ -36,21 +36,21 @@
                 <nav class="sidebar-nav">
                     <div class="nav-section">
                         <h3>Dashboard</h3>
-                        <a href="#" class="nav-item active">
+                        <a href="#" class="nav-item active" onclick="showSection('dashboard')">
                             <i class="fas fa-key"></i>
                             License Keys
                         </a>
                     </div>
                     <div class="nav-section">
                         <h3>Management</h3>
-                        <a href="#" class="nav-item">
+                        <a href="#" class="nav-item" onclick="showSection('banned')">
                             <i class="fas fa-ban"></i>
                             Banned Keys
                         </a>
                     </div>
                     <div class="nav-section">
                         <h3>Settings</h3>
-                        <a href="#" class="nav-item">
+                        <a href="#" class="nav-item" onclick="showSection('settings')">
                             <i class="fas fa-cog"></i>
                             Settings
                         </a>
@@ -66,7 +66,7 @@
             <div class="main-content">
                 <!-- Header -->
                 <header class="content-header">
-                    <h1>Dashboard</h1>
+                    <h1 id="sectionTitle">Dashboard</h1>
                     <div class="header-actions">
                         <div class="user-info">
                             <span>Admin</span>
@@ -75,303 +75,159 @@
                     </div>
                 </header>
 
-                <!-- Stats Overview -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-key"></i>
+                <!-- Dashboard Section -->
+                <div id="dashboardSection" class="section">
+                    <!-- Stats Overview -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-key"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Total Keys</h3>
+                                <span id="totalKeys">0</span>
+                            </div>
                         </div>
-                        <div class="stat-info">
-                            <h3>Total Keys</h3>
-                            <span id="totalKeys">0</span>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Active Keys</h3>
+                                <span id="activeKeys">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-ban"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Banned Keys</h3>
+                                <span id="bannedKeys">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Expired Keys</h3>
+                                <span id="expiredKeys">0</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Active Keys</h3>
-                            <span id="activeKeys">0</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-ban"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Banned Keys</h3>
-                            <span id="bannedKeys">0</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Expired Keys</h3>
-                            <span id="expiredKeys">0</span>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Generate Key Section -->
-                <div class="card">
-                    <h2>Generate New Key</h2>
-                    <div class="generate-form">
-                        <input type="number" id="durationValue" placeholder="Duration" min="1" value="1">
-                        <select id="durationUnit">
-                            <option value="seconds">Seconds</option>
-                            <option value="minutes">Minutes</option>
-                            <option value="hours">Hours</option>
-                            <option value="days" selected>Days</option>
-                            <option value="weeks">Weeks</option>
-                            <option value="months">Months</option>
-                            <option value="years">Years</option>
-                        </select>
-                        <button id="generateBtn" class="btn-primary">
-                            <i class="fas fa-bolt"></i>
-                            Generate Key
-                        </button>
-                    </div>
-                    <div id="genMsg" class="generated-key hidden">
-                        <h4>Generated Key:</h4>
-                        <code id="generatedKeyText"></code>
-                        <button id="copyKeyBtn" class="btn-secondary">
-                            <i class="fas fa-copy"></i>
-                            Copy
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Keys Table -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2>License Keys</h2>
-                        <div class="table-actions">
-                            <input type="text" id="searchInput" placeholder="Search keys...">
-                            <button class="btn-secondary" onclick="loadKeys()">
-                                <i class="fas fa-sync-alt"></i>
-                                Refresh
+                    <!-- Generate Key Section -->
+                    <div class="card">
+                        <h2>Generate New Key</h2>
+                        <div class="generate-form">
+                            <input type="number" id="durationValue" placeholder="Duration" min="1" value="1">
+                            <select id="durationUnit">
+                                <option value="seconds">Seconds</option>
+                                <option value="minutes">Minutes</option>
+                                <option value="hours">Hours</option>
+                                <option value="days" selected>Days</option>
+                                <option value="weeks">Weeks</option>
+                                <option value="months">Months</option>
+                                <option value="years">Years</option>
+                            </select>
+                            <button id="generateBtn" class="btn-primary">
+                                <i class="fas fa-bolt"></i>
+                                Generate Key
+                            </button>
+                        </div>
+                        <div id="genMsg" class="generated-key hidden">
+                            <h4>Generated Key:</h4>
+                            <code id="generatedKeyText"></code>
+                            <button id="copyKeyBtn" class="btn-secondary">
+                                <i class="fas fa-copy"></i>
+                                Copy
                             </button>
                         </div>
                     </div>
-                    <div class="table-container">
-                        <table id="keysTable">
-                            <thead>
-                                <tr>
-                                    <th>Key</th>
-                                    <th>Created</th>
-                                    <th>Expires</th>
-                                    <th>Duration</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Keys will be populated here -->
-                            </tbody>
-                        </table>
+
+                    <!-- Keys Table -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>License Keys</h2>
+                            <div class="table-actions">
+                                <input type="text" id="searchInput" placeholder="Search keys...">
+                                <button class="btn-secondary" onclick="loadKeys()">
+                                    <i class="fas fa-sync-alt"></i>
+                                    Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table id="keysTable">
+                                <thead>
+                                    <tr>
+                                        <th>Key</th>
+                                        <th>Created</th>
+                                        <th>Expires</th>
+                                        <th>Duration</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Keys will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Banned Keys Section -->
+                <div id="bannedSection" class="section hidden">
+                    <div class="card">
+                        <h2>Banned Keys</h2>
+                        <div class="table-container">
+                            <table id="bannedTable">
+                                <thead>
+                                    <tr>
+                                        <th>Key</th>
+                                        <th>Created</th>
+                                        <th>Expires</th>
+                                        <th>Duration</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Banned keys will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div id="settingsSection" class="section hidden">
+                    <div class="card">
+                        <h2>Settings</h2>
+                        <div class="settings-form">
+                            <div class="setting-item">
+                                <label for="autoRefresh">Auto Refresh (seconds):</label>
+                                <input type="number" id="autoRefresh" min="0" value="30">
+                            </div>
+                            <div class="setting-item">
+                                <label for="theme">Theme:</label>
+                                <select id="theme">
+                                    <option value="dark">Dark Red</option>
+                                    <option value="light">Light</option>
+                                </select>
+                            </div>
+                            <button class="btn-primary" onclick="saveSettings()">
+                                <i class="fas fa-save"></i>
+                                Save Settings
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        const loginScreen = document.getElementById("loginScreen");
-        const panelBox = document.getElementById("panelBox");
-        const loginBtn = document.getElementById("loginBtn");
-        const adminPass = document.getElementById("adminPass");
-        const loginMsg = document.getElementById("loginMsg");
-        const generateBtn = document.getElementById("generateBtn");
-        const durationValue = document.getElementById("durationValue");
-        const durationUnit = document.getElementById("durationUnit");
-        const genMsg = document.getElementById("genMsg");
-        const generatedKeyText = document.getElementById("generatedKeyText");
-        const copyKeyBtn = document.getElementById("copyKeyBtn");
-        const keysTable = document.getElementById("keysTable");
-        const searchInput = document.getElementById("searchInput");
-
-        let allKeys = [];
-
-        // Login function
-        loginBtn.addEventListener("click", async () => {
-            const password = adminPass.value;
-            if (!password) {
-                loginMsg.textContent = "Please enter password";
-                return;
-            }
-
-            try {
-                const res = await fetch("/api/login", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ password })
-                });
-                
-                const data = await res.json();
-                
-                if (data.success) {
-                    loginScreen.classList.add("hidden");
-                    panelBox.classList.remove("hidden");
-                    loadKeys();
-                } else {
-                    loginMsg.textContent = data.message || "Wrong password!";
-                }
-            } catch (error) {
-                loginMsg.textContent = "Login failed!";
-            }
-        });
-
-        // Generate key function
-        generateBtn.addEventListener("click", async () => {
-            const duration = parseInt(durationValue.value);
-            const unit = durationUnit.value;
-
-            if (!duration || duration < 1) {
-                alert("Please enter valid duration");
-                return;
-            }
-
-            try {
-                const res = await fetch("/api/keys", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ duration, unit })
-                });
-                
-                const data = await res.json();
-                
-                if (data.success) {
-                    generatedKeyText.textContent = data.key.key;
-                    genMsg.classList.remove("hidden");
-                    loadKeys();
-                } else {
-                    alert("Failed to generate key: " + data.message);
-                }
-            } catch (error) {
-                alert("Failed to generate key");
-            }
-        });
-
-        // Copy key function
-        copyKeyBtn.addEventListener("click", () => {
-            const key = generatedKeyText.textContent;
-            navigator.clipboard.writeText(key).then(() => {
-                alert("Key copied to clipboard!");
-            });
-        });
-
-        // Load keys function
-        async function loadKeys() {
-            try {
-                const res = await fetch("/api/keys");
-                allKeys = await res.json();
-                displayKeys(allKeys);
-                updateStats();
-            } catch (error) {
-                console.error("Failed to load keys:", error);
-            }
-        }
-
-        // Display keys in table
-        function displayKeys(keys) {
-            const tbody = keysTable.querySelector("tbody");
-            tbody.innerHTML = "";
-
-            keys.forEach(key => {
-                const row = document.createElement("tr");
-                
-                const statusClass = key.banned ? "status-banned" : 
-                                  new Date(key.expiresAt) < new Date() ? "status-expired" : "status-active";
-                const statusText = key.banned ? "Banned" : 
-                                 new Date(key.expiresAt) < new Date() ? "Expired" : "Active";
-
-                row.innerHTML = `
-                    <td><code>${key.key}</code></td>
-                    <td>${new Date(key.createdAt).toLocaleDateString()}</td>
-                    <td>${new Date(key.expiresAt).toLocaleDateString()}</td>
-                    <td>${key.duration}</td>
-                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                    <td>
-                        ${!key.banned ? `
-                        <button class="btn-secondary" onclick="banKey(${key.id})">
-                            <i class="fas fa-ban"></i>
-                            Ban
-                        </button>
-                        ` : ""}
-                    </td>
-                `;
-                
-                tbody.appendChild(row);
-            });
-        }
-
-        // Update statistics
-        function updateStats() {
-            const totalKeys = allKeys.length;
-            const activeKeys = allKeys.filter(k => !k.banned && new Date(k.expiresAt) > new Date()).length;
-            const bannedKeys = allKeys.filter(k => k.banned).length;
-            const expiredKeys = allKeys.filter(k => !k.banned && new Date(k.expiresAt) < new Date()).length;
-
-            document.getElementById("totalKeys").textContent = totalKeys;
-            document.getElementById("activeKeys").textContent = activeKeys;
-            document.getElementById("bannedKeys").textContent = bannedKeys;
-            document.getElementById("expiredKeys").textContent = expiredKeys;
-        }
-
-        // Ban key function
-        async function banKey(keyId) {
-            if (!confirm("Are you sure you want to ban this key?")) return;
-
-            try {
-                const res = await fetch(`/api/keys/${keyId}/ban`, {
-                    method: "POST"
-                });
-                
-                const data = await res.json();
-                
-                if (data.success) {
-                    loadKeys();
-                } else {
-                    alert("Failed to ban key");
-                }
-            } catch (error) {
-                alert("Failed to ban key");
-            }
-        }
-
-        // Search functionality
-        searchInput.addEventListener("input", (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const filteredKeys = allKeys.filter(key => 
-                key.key.toLowerCase().includes(searchTerm) ||
-                key.duration.toLowerCase().includes(searchTerm) ||
-                key.status.toLowerCase().includes(searchTerm)
-            );
-            displayKeys(filteredKeys);
-        });
-
-        // Logout function
-        function logout() {
-            localStorage.removeItem("eclipse_auth");
-            window.location.reload();
-        }
-
-        // Check if already logged in
-        if (localStorage.getItem("eclipse_auth")) {
-            loginScreen.classList.add("hidden");
-            panelBox.classList.remove("hidden");
-            loadKeys();
-        }
-
-        // Enter key to login
-        adminPass.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
-                loginBtn.click();
-            }
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
