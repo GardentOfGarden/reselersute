@@ -5,78 +5,100 @@ const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "defaultpass";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static("public"));
 
 const dbFile = path.join(__dirname, "keys.json");
 
-// Работа с ключами
+// Загрузка ключей
 function loadKeys() {
-  if (!fs.existsSync(dbFile)) fs.writeFileSync(dbFile, JSON.stringify([]));
-  return JSON.parse(fs.readFileSync(dbFile, "utf-8"));
+    if (!fs.existsSync(dbFile)) {
+        fs.writeFileSync(dbFile, JSON.stringify([]));
+        return [];
+    }
+    try {
+        return JSON.parse(fs.readFileSync(dbFile, "utf-8"));
+    } catch {
+        return [];
+    }
 }
 
+// Сохранение ключей
 function saveKeys(keys) {
-  fs.writeFileSync(dbFile, JSON.stringify(keys, null, 2));
+    fs.writeFileSync(dbFile, JSON.stringify(keys, null, 2));
 }
 
-function generateKey(durationMs) {
-  return {
-    value:
-      Math.random().toString(36).substring(2, 10) +
-      "-" +
-      Math.random().toString(36).substring(2, 10),
-    banned: false,
-    expiresAt: durationMs ? new Date(Date.now() + durationMs).toISOString() : null,
-  };
+// Генерация ключа
+function generateKey() {
+    return 'ECLIPSE-' + 
+           Math.random().toString(36).substring(2, 10).toUpperCase() + 
+           '-' + 
+           Math.random().toString(36).substring(2, 10).toUpperCase() + 
+           '-' + 
+           Math.random().toString(36).substring(2, 10).toUpperCase();
 }
 
-// Login для админа
+// API Routes
 app.post("/api/login", (req, res) => {
-  const { password } = req.body;
-  if (password === ADMIN_PASSWORD) {
-    return res.json({ success: true });
-  }
-  res.json({ success: false, message: "Wrong password" });
+    const { password } = req.body;
+    if (password === ADMIN_PASSWORD) {
+        res.json({ success: true });
+    } else {
+        res.json({ success: false, message: "Invalid password" });
+    }
 });
 
-// Получить все ключи
 app.get("/api/keys", (req, res) => {
-  res.json(loadKeys());
+    res.json(loadKeys());
 });
 
-// Создать новый ключ
 app.post("/api/keys", (req, res) => {
-  const { durationMs } = req.body; // теперь можно указывать в миллисекундах
-  const keys = loadKeys();
-  const key = generateKey(durationMs);
-  keys.push(key);
-  saveKeys(keys);
-  res.json(key);
+    const { duration, unit } = req.body;
+    
+    const multipliers = {
+        seconds: 1000,
+        minutes: 60000,
+        hours: 3600000,
+        days: 86400000,
+        weeks: 604800000,
+        months: 2592000000,
+        years: 31536000000
+    };
+    
+    const durationMs = duration * multipliers[unit];
+    const expiresAt = new Date(Date.now() + durationMs);
+    
+    const newKey = {
+        id: Date.now(),
+        key: generateKey(),
+        createdAt: new Date().toISOString(),
+        expiresAt: expiresAt.toISOString(),
+        status: "active",
+        duration: `${duration} ${unit}`,
+        banned: false
+    };
+    
+    const keys = loadKeys();
+    keys.push(newKey);
+    saveKeys(keys);
+    
+    res.json({ success: true, key: newKey });
 });
 
-// Забанить ключ
-app.post("/api/ban", (req, res) => {
-  const { value } = req.body;
-  let keys = loadKeys();
-  keys = keys.map((k) => (k.value === value ? { ...k, banned: true } : k));
-  saveKeys(keys);
-  res.json({ success: true });
+app.post("/api/keys/:id/ban", (req, res) => {
+    const { id } = req.params;
+    const keys = loadKeys();
+    const updatedKeys = keys.map(key => 
+        key.id === parseInt(id) ? { ...key, banned: true, status: "banned" } : key
+    );
+    
+    saveKeys(updatedKeys);
+    res.json({ success: true });
 });
 
-// Проверка ключа
-app.post("/api/check", (req, res) => {
-  const { value } = req.body;
-  const keys = loadKeys();
-  const key = keys.find((k) => k.value === value);
-  if (!key) return res.json({ valid: false, reason: "not_found" });
-  if (key.banned) return res.json({ valid: false, reason: "banned" });
-  if (key.expiresAt && new Date(key.expiresAt) < new Date())
-    return res.json({ valid: false, reason: "expired" });
-  res.json({ valid: true });
+app.listen(PORT, () => {
+    console.log(`🚀 Eclipse Panel running on port ${PORT}`);
 });
-
-app.listen(PORT, () => console.log(`✅ Eclipse server running at http://localhost:${PORT}`));
