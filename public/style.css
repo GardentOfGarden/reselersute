@@ -1,0 +1,69 @@
+/* Reset базовые стили */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Фоновый стиль страницы */
+body {
+    background: linear-gradient(135deg, #4a90e2, #50e3c2);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Контейнер формы */
+.admin-container {
+    background-color: #ffffffcc;
+    padding: 40px 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    width: 350px;
+    text-align: center;
+}
+
+/* Заголовок панели */
+.admin-container h1 {
+    font-size: 1.8rem;
+    margin-bottom: 25px;
+    color: #333;
+}
+
+/* Поля ввода */
+.admin-container input[type="password"],
+.admin-container input[type="text"],
+.admin-container input[type="number"] {
+    width: 100%;
+    padding: 12px 15px;
+    margin: 10px 0 20px 0;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+/* Кнопка */
+.admin-container button {
+    width: 100%;
+    padding: 12px;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.admin-container button:hover {
+    background-color: #357abd;
+}
+
+/* Сообщения */
+.message {
+    margin-top: 15px;
+    font-size: 0.9rem;
+    color: red;
+}
