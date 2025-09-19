@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Eclipse</title>
+  <style>
+    body { background-color: #1a0000; color: #ff4d4d; font-family: Arial, sans-serif; }
+    h1 { text-align: center; }
+    .container { width: 80%%; margin: auto; }
+    button { background: #660000; color: white; border: none; padding: 10px; margin: 5px; cursor: pointer; }
+    button:hover { background: #990000; }
+    table { width: 100%%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #660000; padding: 8px; text-align: center; }
+    th { background-color: #330000; }
+  </style>
+</head>
+<body>
+  <h1>Eclipse — Панель управления ключами</h1>
+  <div class="container">
+    <input type="number" id="days" placeholder="Срок (дни)" />
+    <button onclick="generateKey()">Сгенерировать ключ</button>
+    <table id="keysTable">
+      <thead>
+        <tr>
+          <th>Ключ</th>
+          <th>Забанен</th>
+          <th>Срок действия</th>
+          <th>Действие</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <script>
+    async function loadKeys() {
+      const res = await fetch('/api/keys');
+      const keys = await res.json();
+      const tbody = document.querySelector('#keysTable tbody');
+      tbody.innerHTML = '';
+      keys.forEach(k => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${k.value}</td>
+          <td>${k.banned ? 'Да' : 'Нет'}</td>
+          <td>${k.expiresAt ? new Date(k.expiresAt).toLocaleString() : 'Бессрочно'}</td>
+          <td>${!k.banned ? `<button onclick="banKey('${k.value}')">Забанить</button>` : ''}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function generateKey() {
+      const days = document.getElementById('days').value;
+      await fetch('/api/keys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ days: days ? parseInt(days) : null })
+      });
+      loadKeys();
+    }
+
+    async function banKey(value) {
+      await fetch('/api/ban', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value })
+      });
+      loadKeys();
+    }
+
+    loadKeys();
+  </script>
+</body>
+</html>
