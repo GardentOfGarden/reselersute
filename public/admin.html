@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Eclipse Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Eclipse Admin Panel</h1>
+  
+  <!-- Форма логина -->
+  <div id="loginBox">
+    <input type="password" id="password" placeholder="Введите пароль">
+    <button onclick="login()">Войти</button>
+    <p id="loginStatus"></p>
+  </div>
+
+  <!-- Панель управления -->
+  <div id="adminPanel" style="display:none;">
+    <h2>Управление ключами</h2>
+    <button onclick="generateKey()">Создать ключ</button>
+    <div id="keysList"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
