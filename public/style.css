@@ -1,117 +1,67 @@
-/* General Reset */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
 body {
-  display: flex;
-  height: 100vh;
-  background: #f4f6f8;
-}
-
-/* Sidebar */
-.sidebar {
-  width: 250px;
-  background-color: #1f1f2e;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #1e1e2f, #2c2c3f);
   color: #fff;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding-top: 50px;
 }
 
-.sidebar .logo {
-  font-size: 1.5rem;
-  font-weight: bold;
-  padding: 20px;
-  text-align: center;
-  border-bottom: 1px solid #333;
-}
-
-.sidebar .menu {
-  list-style: none;
-  margin-top: 20px;
-}
-
-.sidebar .menu li {
-  padding: 15px 20px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.sidebar .menu li:hover,
-.sidebar .menu li.active {
-  background-color: #3a3a5a;
-}
-
-/* Main */
-.main {
-  flex: 1;
+.container {
+  width: 500px;
+  background: #2c2c3f;
   padding: 30px;
-  overflow-y: auto;
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
 
-.section {
-  display: none;
-}
-
-.section.active {
-  display: block;
-}
-
-h2 {
+h1 {
+  text-align: center;
   margin-bottom: 20px;
-  color: #333;
+  color: #ffcc00;
 }
 
-form {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.box {
   margin-bottom: 20px;
+  padding: 20px;
+  background: #3a3a50;
+  border-radius: 10px;
 }
 
-input, select {
-  padding: 8px 12px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
+input, select, button {
+  width: 100%;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
 }
 
 button {
-  padding: 8px 15px;
-  background-color: #1f1f2e;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
+  background: #ffcc00;
+  color: #2c2c3f;
   cursor: pointer;
+  transition: 0.3s;
 }
 
 button:hover {
-  background-color: #3a3a5a;
+  background: #e6b800;
 }
 
-#generatedKey {
-  margin-top: 10px;
-  padding: 10px;
-  background-color: #dff0d8;
+.hidden {
+  display: none;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+ul li {
+  background: #2c2c3f;
+  padding: 8px;
+  margin-bottom: 5px;
   border-radius: 5px;
-  color: #3c763d;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-thead th {
-  background-color: #1f1f2e;
-  color: #fff;
-  padding: 10px;
-  text-align: left;
-}
-
-tbody td {
-  padding: 10px;
-  border-bottom: 1px solid #ccc;
 }
