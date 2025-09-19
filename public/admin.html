@@ -1,27 +1,35 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Eclipse Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eclipse Admin Panel</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Eclipse Admin Panel</h1>
-  
-  <!-- Форма логина -->
-  <div id="loginBox">
-    <input type="password" id="password" placeholder="Введите пароль">
-    <button onclick="login()">Войти</button>
-    <p id="loginStatus"></p>
+  <div class="login-container" id="login">
+    <h1>Eclipse Admin Login</h1>
+    <input type="password" id="password" placeholder="Enter admin password">
+    <button id="loginBtn">Login</button>
+    <p id="loginMsg" class="error"></p>
   </div>
 
-  <!-- Панель управления -->
-  <div id="adminPanel" style="display:none;">
-    <h2>Управление ключами</h2>
-    <button onclick="generateKey()">Создать ключ</button>
-    <div id="keysList"></div>
+  <div class="admin-panel" id="panel" style="display:none;">
+    <h1>Admin Panel</h1>
+
+    <div class="new-key">
+      <h2>Create New Key</h2>
+      <input type="number" id="days" placeholder="Valid for X days (optional)">
+      <button id="createKeyBtn">Generate Key</button>
+      <p id="newKey" class="success"></p>
+    </div>
+
+    <div class="keys-list">
+      <h2>All Keys</h2>
+      <ul id="keys"></ul>
+    </div>
   </div>
 
-  <script src="script.js"></script>
+  <script src="admin.js"></script>
 </body>
 </html>
