@@ -653,3 +653,224 @@ body {
     pointer-events: none;
     z-index: 1;
 }
+/* Monitor Styles */
+.monitor-container {
+    background: #0a0a0a;
+    min-height: 100vh;
+    color: #fff;
+}
+
+.monitor-header {
+    background: rgba(255, 42, 42, 0.1);
+    border-bottom: 1px solid #ff2a2a33;
+    padding: 20px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.monitor-header .logo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.monitor-header .logo i {
+    font-size: 2rem;
+    color: #ff2a2a;
+}
+
+.monitor-header .logo h1 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    background: linear-gradient(135deg, #ff2a2a, #ff6b6b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.monitor-stats {
+    background: rgba(255, 42, 42, 0.2);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.monitor-stats span {
+    color: #ff2a2a;
+    font-size: 1.2rem;
+}
+
+.monitor-content {
+    padding: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Sessions List */
+.sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.session-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid #ff2a2a22;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.session-item:hover {
+    border-color: #ff2a2a;
+    background: rgba(255, 42, 42, 0.05);
+}
+
+.session-info {
+    flex: 1;
+}
+
+.session-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.session-user {
+    font-weight: 600;
+    color: #ff6b6b;
+}
+
+.session-status {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.session-status.live {
+    background: rgba(0, 255, 0, 0.1);
+    color: #00ff00;
+    border: 1px solid rgba(0, 255, 0, 0.3);
+}
+
+.session-key code {
+    color: #ff2a2a;
+    font-family: 'Courier New', monospace;
+}
+
+.session-meta {
+    display: flex;
+    gap: 20px;
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.session-meta i {
+    margin-right: 5px;
+}
+
+.session-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Screenshots Grid */
+.screenshots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.screenshot-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid #ff2a2a22;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.screenshot-item:hover {
+    border-color: #ff2a2a;
+    transform: translateY(-2px);
+}
+
+.screenshot-header {
+    padding: 15px;
+    background: rgba(255, 42, 42, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.screenshot-user {
+    color: #ff6b6b;
+    font-weight: 600;
+}
+
+.screenshot-time {
+    color: #888;
+}
+
+.screenshot-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-bottom: 1px solid #ff2a2a22;
+}
+
+.screenshot-footer {
+    padding: 15px;
+}
+
+.screenshot-key {
+    color: #ff2a2a;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+}
+
+/* No content states */
+.no-sessions, .no-screenshots {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+}
+
+.no-sessions i, .no-screenshots i {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .monitor-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .session-item {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .session-actions {
+        justify-content: center;
+    }
+    
+    .screenshots-grid {
+        grid-template-columns: 1fr;
+    }
+}
