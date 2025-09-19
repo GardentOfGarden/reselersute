@@ -1,48 +1,71 @@
-const loginDiv = document.getElementById("login");
-const panelDiv = document.getElementById("panel");
-const loginBtn = document.getElementById("loginBtn");
-const passwordInput = document.getElementById("password");
-const loginMsg = document.getElementById("loginMsg");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eclipse | Reseller Panel</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo">Eclipse | Reseller Panel</div>
+    <ul class="menu">
+      <li class="active" data-section="generate">Generate Key</li>
+      <li data-section="history">History</li>
+      <li data-section="settings">Settings</li>
+    </ul>
+  </div>
 
-loginBtn.onclick = async () => {
-  const password = passwordInput.value;
-  const res = await fetch("/api/admin-login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ password })
-  });
-  const data = await res.json();
-  if (data.success) {
-    loginDiv.style.display = "none";
-    panelDiv.style.display = "block";
-    loadKeys();
-  } else {
-    loginMsg.textContent = "Wrong password!";
-  }
-};
+  <div class="main">
+    <!-- Generate Key Section -->
+    <section id="generate" class="section active">
+      <h2>Generate Key</h2>
+      <form id="keyForm">
+        <label for="duration">Duration:</label>
+        <input type="number" id="duration" placeholder="Enter amount" min="1" required>
+        <select id="unit">
+          <option value="seconds">Seconds</option>
+          <option value="minutes">Minutes</option>
+          <option value="hours">Hours</option>
+          <option value="days" selected>Days</option>
+          <option value="weeks">Weeks</option>
+          <option value="months">Months</option>
+          <option value="years">Years</option>
+        </select>
+        <button type="submit">Generate</button>
+      </form>
+      <div id="generatedKey"></div>
+    </section>
 
-// Создание нового ключа
-document.getElementById("createKeyBtn").onclick = async () => {
-  const days = document.getElementById("days").value;
-  const res = await fetch("/api/keys", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ days: days ? Number(days) : null })
-  });
-  const data = await res.json();
-  document.getElementById("newKey").textContent = `Key: ${data.value}`;
-  loadKeys();
-};
+    <!-- History Section -->
+    <section id="history" class="section">
+      <h2>History</h2>
+      <table id="keyHistory">
+        <thead>
+          <tr>
+            <th>Key</th>
+            <th>Duration</th>
+            <th>Status</th>
+            <th>Created At</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Filled dynamically -->
+        </tbody>
+      </table>
+    </section>
 
-// Загрузка всех ключей
-async function loadKeys() {
-  const res = await fetch("/api/keys");
-  const keys = await res.json();
-  const ul = document.getElementById("keys");
-  ul.innerHTML = "";
-  keys.forEach(k => {
-    const li = document.createElement("li");
-    li.textContent = `${k.value} ${k.banned ? "(Banned)" : ""} ${k.expiresAt ? "- Expires: " + new Date(k.expiresAt).toLocaleDateString() : ""}`;
-    ul.appendChild(li);
-  });
-}
+    <!-- Settings Section -->
+    <section id="settings" class="section">
+      <h2>Settings</h2>
+      <form id="settingsForm">
+        <label for="newPassword">Change Admin Password:</label>
+        <input type="password" id="newPassword" placeholder="New password">
+        <button type="submit">Save</button>
+      </form>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
