@@ -1,9 +1,12 @@
 // server.js
 const express = require("express");
+const cors = require("cors"); // <--- добавляем
 const fs = require("fs");
 const path = require("path");
 
 const app = express();
+app.use(cors()); // <--- включаем CORS
+
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
