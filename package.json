@@ -1,7 +1,7 @@
 {
   "name": "eclipse-panel",
-  "version": "1.0.0",
-  "description": "Modern Eclipse Reseller Panel",
+  "version": "1.2.0",
+  "description": "Modern Eclipse Reseller Panel with Live Monitoring",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -13,13 +13,17 @@
     "reseller",
     "panel",
     "license",
-    "keys"
+    "keys",
+    "monitoring",
+    "live"
   ],
   "author": "Eclipse Team",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "ws": "^8.14.2",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
