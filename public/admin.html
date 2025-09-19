@@ -2,34 +2,83 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Eclipse Admin Panel</title>
+  <title>Eclipse | Reseller Panel</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="login-container" id="login">
-    <h1>Eclipse Admin Login</h1>
-    <input type="password" id="password" placeholder="Enter admin password">
-    <button id="loginBtn">Login</button>
-    <p id="loginMsg" class="error"></p>
-  </div>
+  <div class="container">
+    <h1>Eclipse | Reseller Panel</h1>
 
-  <div class="admin-panel" id="panel" style="display:none;">
-    <h1>Admin Panel</h1>
-
-    <div class="new-key">
-      <h2>Create New Key</h2>
-      <input type="number" id="days" placeholder="Valid for X days (optional)">
-      <button id="createKeyBtn">Generate Key</button>
-      <p id="newKey" class="success"></p>
+    <div id="loginBox" class="box">
+      <h2>Admin Login</h2>
+      <input type="password" id="adminPass" placeholder="Enter password">
+      <button id="loginBtn">Login</button>
+      <p id="loginMsg"></p>
     </div>
 
-    <div class="keys-list">
-      <h2>All Keys</h2>
-      <ul id="keys"></ul>
+    <div id="panelBox" class="box hidden">
+      <h2>Key Generator</h2>
+      <label>Duration:</label>
+      <select id="durationSelect">
+        <option value="3600000">1 Hour</option>
+        <option value="86400000">1 Day</option>
+        <option value="604800000">1 Week</option>
+        <option value="2592000000">1 Month</option>
+        <option value="31536000000">1 Year</option>
+      </select>
+      <button id="generateBtn">Generate Key</button>
+      <p id="genMsg"></p>
+
+      <h3>All Keys</h3>
+      <ul id="keysList"></ul>
     </div>
   </div>
 
-  <script src="admin.js"></script>
+  <script>
+    const loginBox = document.getElementById("loginBox");
+    const panelBox = document.getElementById("panelBox");
+    const loginBtn = document.getElementById("loginBtn");
+    const adminPass = document.getElementById("adminPass");
+    const loginMsg = document.getElementById("loginMsg");
+
+    loginBtn.addEventListener("click", async () => {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ password: adminPass.value })
+      });
+      const data = await res.json();
+      if(data.success){
+        loginBox.classList.add("hidden");
+        panelBox.classList.remove("hidden");
+        loadKeys();
+      } else {
+        loginMsg.textContent = "Wrong password!";
+      }
+    });
+
+    const generateBtn = document.getElementById("generateBtn");
+    const durationSelect = document.getElementById("durationSelect");
+    const genMsg = document.getElementById("genMsg");
+    const keysList = document.getElementById("keysList");
+
+    generateBtn.addEventListener("click", async () => {
+      const durationMs = parseInt(durationSelect.value);
+      const res = await fetch("/api/keys", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ durationMs })
+      });
+      const key = await res.json();
+      genMsg.textContent = `Generated: ${key.value}`;
+      loadKeys();
+    });
+
+    async function loadKeys(){
+      const res = await fetch("/api/keys");
+      const keys = await res.json();
+      keysList.innerHTML = keys.map(k => `<li>${k.value} - ${k.expiresAt || "No Expiry"} ${k.banned ? "(Banned)" : ""}</li>`).join("");
+    }
+  </script>
 </body>
 </html>
