@@ -15,138 +15,67 @@ const dbFile = path.join(__dirname, "keys.json");
 
 // Загрузка ключей
 function loadKeys() {
-    try {
-        if (fs.existsSync(dbFile)) {
-            const data = fs.readFileSync(dbFile, "utf-8");
-            return JSON.parse(data);
-        }
-    } catch (error) {
-        console.error("Error loading keys:", error);
-    }
-    return [];
+  if (!fs.existsSync(dbFile)) fs.writeFileSync(dbFile, JSON.stringify([]));
+  return JSON.parse(fs.readFileSync(dbFile, "utf-8"));
 }
 
-// Сохранение ключей
 function saveKeys(keys) {
-    try {
-        fs.writeFileSync(dbFile, JSON.stringify(keys, null, 2));
-    } catch (error) {
-        console.error("Error saving keys:", error);
-    }
+  fs.writeFileSync(dbFile, JSON.stringify(keys, null, 2));
 }
 
-// Генерация ключа
-function generateKey() {
-    return 'ECLIPSE-' + 
-           Math.random().toString(36).substring(2, 10).toUpperCase() + 
-           '-' + 
-           Math.random().toString(36).substring(2, 10).toUpperCase() + 
-           '-' + 
-           Math.random().toString(36).substring(2, 10).toUpperCase();
+function generateKey(durationMs) {
+  return {
+    value: "ECLIPSE-" + Math.random().toString(36).substring(2, 10).toUpperCase() + 
+           "-" + Math.random().toString(36).substring(2, 10).toUpperCase() + 
+           "-" + Math.random().toString(36).substring(2, 10).toUpperCase(),
+    banned: false,
+    expiresAt: durationMs ? new Date(Date.now() + durationMs).toISOString() : null,
+  };
 }
 
-// Конвертация в миллисекунды
-function convertToMs(duration, unit) {
-    const multipliers = {
-        seconds: 1000,
-        minutes: 60000,
-        hours: 3600000,
-        days: 86400000,
-        weeks: 604800000,
-        months: 2592000000,
-        years: 31536000000
-    };
-    return duration * multipliers[unit];
-}
-
-// API Routes
+// Login для админа
 app.post("/api/login", (req, res) => {
-    const { password } = req.body;
-    if (password === ADMIN_PASSWORD) {
-        res.json({ success: true });
-    } else {
-        res.json({ success: false, message: "Invalid password" });
-    }
+  const { password } = req.body;
+  if (password === ADMIN_PASSWORD) {
+    return res.json({ success: true });
+  }
+  res.json({ success: false, message: "Wrong password" });
 });
 
+// Получить все ключи
 app.get("/api/keys", (req, res) => {
-    const keys = loadKeys();
-    res.json(keys);
+  res.json(loadKeys());
 });
 
+// Создать новый ключ
 app.post("/api/keys", (req, res) => {
-    try {
-        const { duration, unit } = req.body;
-        
-        if (!duration || !unit) {
-            return res.status(400).json({ success: false, message: "Duration and unit are required" });
-        }
-
-        const durationMs = convertToMs(parseInt(duration), unit);
-        const expiresAt = new Date(Date.now() + durationMs);
-        
-        const newKey = {
-            id: Date.now(),
-            key: generateKey(),
-            createdAt: new Date().toISOString(),
-            expiresAt: expiresAt.toISOString(),
-            status: "active",
-            duration: `${duration} ${unit}`,
-            banned: false
-        };
-        
-        const keys = loadKeys();
-        keys.push(newKey);
-        saveKeys(keys);
-        
-        res.json({ success: true, key: newKey });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Server error" });
-    }
+  const { durationMs } = req.body;
+  const keys = loadKeys();
+  const key = generateKey(durationMs);
+  keys.push(key);
+  saveKeys(keys);
+  res.json(key);
 });
 
-app.post("/api/keys/:id/ban", (req, res) => {
-    try {
-        const { id } = req.params;
-        const keys = loadKeys();
-        const keyId = parseInt(id);
-        
-        const updatedKeys = keys.map(key => 
-            key.id === keyId ? { ...key, banned: true, status: "banned" } : key
-        );
-        
-        saveKeys(updatedKeys);
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Server error" });
-    }
+// Забанить ключ
+app.post("/api/ban", (req, res) => {
+  const { value } = req.body;
+  let keys = loadKeys();
+  keys = keys.map((k) => (k.value === value ? { ...k, banned: true } : k));
+  saveKeys(keys);
+  res.json({ success: true });
 });
 
-// Новый endpoint для проверки ключей
-app.post("/api/keys/check", (req, res) => {
-    const { key } = req.body;
-    const keys = loadKeys();
-    const foundKey = keys.find(k => k.key === key);
-    
-    if (!foundKey) {
-        return res.json({ valid: false, reason: "not_found" });
-    }
-    
-    if (foundKey.banned) {
-        return res.json({ valid: false, reason: "banned" });
-    }
-    
-    if (new Date(foundKey.expiresAt) < new Date()) {
-        return res.json({ valid: false, reason: "expired" });
-    }
-    
-    res.json({ valid: true, key: foundKey });
+// Проверка ключа
+app.post("/api/check", (req, res) => {
+  const { value } = req.body;
+  const keys = loadKeys();
+  const key = keys.find((k) => k.value === value);
+  if (!key) return res.json({ valid: false, reason: "not_found" });
+  if (key.banned) return res.json({ valid: false, reason: "banned" });
+  if (key.expiresAt && new Date(key.expiresAt) < new Date())
+    return res.json({ valid: false, reason: "expired" });
+  res.json({ valid: true });
 });
 
-app.listen(PORT, () => {
-    console.log(`🚀 Eclipse Panel running on port ${PORT}`);
-    // Создаем файл если его нет
-    if (!fs.existsSync(dbFile)) {
-        saveKeys([]);
-    }
-});
+app.listen(PORT, () => console.log(`✅ Eclipse server running at http://localhost:${PORT}`));
