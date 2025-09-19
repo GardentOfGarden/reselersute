@@ -1,472 +1,377 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECLIPSE | Admin Panel</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Login Screen -->
+        <div id="loginScreen" class="login-container">
+            <div class="login-box">
+                <div class="logo">
+                    <i class="fas fa-fire"></i>
+                    <h1>ECLIPSE</h1>
+                </div>
+                <p class="subtitle">Reseller Admin Panel</p>
+                <div class="input-group">
+                    <input type="password" id="adminPass" placeholder="Enter admin password">
+                    <button id="loginBtn">Login</button>
+                </div>
+                <p id="loginMsg"></p>
+            </div>
+        </div>
 
-body {
-    background: #0a0a0a;
-    color: #fff;
-    min-height: 100vh;
-}
+        <!-- Main Panel -->
+        <div id="panelBox" class="main-panel hidden">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <i class="fas fa-fire"></i>
+                    <h2>ECLIPSE</h2>
+                </div>
+                <nav class="sidebar-nav">
+                    <div class="nav-section">
+                        <h3>Dashboard</h3>
+                        <a href="#" class="nav-item active">
+                            <i class="fas fa-key"></i>
+                            License Keys
+                        </a>
+                    </div>
+                    <div class="nav-section">
+                        <h3>Management</h3>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-ban"></i>
+                            Banned Keys
+                        </a>
+                    </div>
+                    <div class="nav-section">
+                        <h3>Settings</h3>
+                        <a href="#" class="nav-item">
+                            <i class="fas fa-cog"></i>
+                            Settings
+                        </a>
+                        <a href="#" class="nav-item" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Logout
+                        </a>
+                    </div>
+                </nav>
+            </div>
 
-/* Login Screen */
-.login-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 50%, #2a0a0a 100%);
-}
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Header -->
+                <header class="content-header">
+                    <h1>Dashboard</h1>
+                    <div class="header-actions">
+                        <div class="user-info">
+                            <span>Admin</span>
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                    </div>
+                </header>
 
-.login-box {
-    background: rgba(255, 255, 255, 0.02);
-    backdrop-filter: blur(10px);
-    border: 1px solid #ff2a2a33;
-    border-radius: 15px;
-    padding: 40px;
-    text-align: center;
-    width: 400px;
-}
+                <!-- Stats Overview -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-key"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Keys</h3>
+                            <span id="totalKeys">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Active Keys</h3>
+                            <span id="activeKeys">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-ban"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Banned Keys</h3>
+                            <span id="bannedKeys">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Expired Keys</h3>
+                            <span id="expiredKeys">0</span>
+                        </div>
+                    </div>
+                </div>
 
-.logo {
-    margin-bottom: 20px;
-}
+                <!-- Generate Key Section -->
+                <div class="card">
+                    <h2>Generate New Key</h2>
+                    <div class="generate-form">
+                        <input type="number" id="durationValue" placeholder="Duration" min="1" value="1">
+                        <select id="durationUnit">
+                            <option value="seconds">Seconds</option>
+                            <option value="minutes">Minutes</option>
+                            <option value="hours">Hours</option>
+                            <option value="days" selected>Days</option>
+                            <option value="weeks">Weeks</option>
+                            <option value="months">Months</option>
+                            <option value="years">Years</option>
+                        </select>
+                        <button id="generateBtn" class="btn-primary">
+                            <i class="fas fa-bolt"></i>
+                            Generate Key
+                        </button>
+                    </div>
+                    <div id="genMsg" class="generated-key hidden">
+                        <h4>Generated Key:</h4>
+                        <code id="generatedKeyText"></code>
+                        <button id="copyKeyBtn" class="btn-secondary">
+                            <i class="fas fa-copy"></i>
+                            Copy
+                        </button>
+                    </div>
+                </div>
 
-.logo i {
-    font-size: 3rem;
-    color: #ff2a2a;
-    margin-bottom: 10px;
-}
+                <!-- Keys Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>License Keys</h2>
+                        <div class="table-actions">
+                            <input type="text" id="searchInput" placeholder="Search keys...">
+                            <button class="btn-secondary" onclick="loadKeys()">
+                                <i class="fas fa-sync-alt"></i>
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="keysTable">
+                            <thead>
+                                <tr>
+                                    <th>Key</th>
+                                    <th>Created</th>
+                                    <th>Expires</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Keys will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-.logo h1 {
-    font-size: 2.5rem;
-    font-weight: bold;
-    background: linear-gradient(135deg, #ff2a2a, #ff6b6b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
+    <script>
+        const loginScreen = document.getElementById("loginScreen");
+        const panelBox = document.getElementById("panelBox");
+        const loginBtn = document.getElementById("loginBtn");
+        const adminPass = document.getElementById("adminPass");
+        const loginMsg = document.getElementById("loginMsg");
+        const generateBtn = document.getElementById("generateBtn");
+        const durationValue = document.getElementById("durationValue");
+        const durationUnit = document.getElementById("durationUnit");
+        const genMsg = document.getElementById("genMsg");
+        const generatedKeyText = document.getElementById("generatedKeyText");
+        const copyKeyBtn = document.getElementById("copyKeyBtn");
+        const keysTable = document.getElementById("keysTable");
+        const searchInput = document.getElementById("searchInput");
 
-.subtitle {
-    color: #888;
-    margin-bottom: 30px;
-    font-size: 0.9rem;
-}
+        let allKeys = [];
 
-.input-group {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-}
+        // Login function
+        loginBtn.addEventListener("click", async () => {
+            const password = adminPass.value;
+            if (!password) {
+                loginMsg.textContent = "Please enter password";
+                return;
+            }
 
-.input-group input {
-    flex: 1;
-    padding: 12px 16px;
-    border: 1px solid #ff2a2a33;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    color: #fff;
-    font-size: 14px;
-}
+            try {
+                const res = await fetch("/api/login", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ password })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    loginScreen.classList.add("hidden");
+                    panelBox.classList.remove("hidden");
+                    loadKeys();
+                } else {
+                    loginMsg.textContent = data.message || "Wrong password!";
+                }
+            } catch (error) {
+                loginMsg.textContent = "Login failed!";
+            }
+        });
 
-.input-group input::placeholder {
-    color: #666;
-}
+        // Generate key function
+        generateBtn.addEventListener("click", async () => {
+            const duration = parseInt(durationValue.value);
+            const unit = durationUnit.value;
 
-.input-group input:focus {
-    outline: none;
-    border-color: #ff2a2a;
-}
+            if (!duration || duration < 1) {
+                alert("Please enter valid duration");
+                return;
+            }
 
-.input-group button {
-    padding: 12px 24px;
-    background: linear-gradient(135deg, #ff2a2a, #ff6b6b);
-    border: none;
-    border-radius: 8px;
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-}
+            try {
+                const res = await fetch("/api/keys", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ duration, unit })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    generatedKeyText.textContent = data.key.key;
+                    genMsg.classList.remove("hidden");
+                    loadKeys();
+                } else {
+                    alert("Failed to generate key: " + data.message);
+                }
+            } catch (error) {
+                alert("Failed to generate key");
+            }
+        });
 
-.input-group button:hover {
-    background: linear-gradient(135deg, #ff1a1a, #ff5b5b);
-    transform: translateY(-2px);
-}
+        // Copy key function
+        copyKeyBtn.addEventListener("click", () => {
+            const key = generatedKeyText.textContent;
+            navigator.clipboard.writeText(key).then(() => {
+                alert("Key copied to clipboard!");
+            });
+        });
 
-/* Main Panel */
-.main-panel {
-    display: flex;
-    min-height: 100vh;
-}
+        // Load keys function
+        async function loadKeys() {
+            try {
+                const res = await fetch("/api/keys");
+                allKeys = await res.json();
+                displayKeys(allKeys);
+                updateStats();
+            } catch (error) {
+                console.error("Failed to load keys:", error);
+            }
+        }
 
-.hidden {
-    display: none !important;
-}
+        // Display keys in table
+        function displayKeys(keys) {
+            const tbody = keysTable.querySelector("tbody");
+            tbody.innerHTML = "";
 
-/* Sidebar */
-.sidebar {
-    width: 280px;
-    background: #0a0a0a;
-    border-right: 1px solid #ff2a2a22;
-    padding: 20px;
-}
+            keys.forEach(key => {
+                const row = document.createElement("tr");
+                
+                const statusClass = key.banned ? "status-banned" : 
+                                  new Date(key.expiresAt) < new Date() ? "status-expired" : "status-active";
+                const statusText = key.banned ? "Banned" : 
+                                 new Date(key.expiresAt) < new Date() ? "Expired" : "Active";
 
-.sidebar-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 40px;
-    padding: 10px;
-}
+                row.innerHTML = `
+                    <td><code>${key.key}</code></td>
+                    <td>${new Date(key.createdAt).toLocaleDateString()}</td>
+                    <td>${new Date(key.expiresAt).toLocaleDateString()}</td>
+                    <td>${key.duration}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        ${!key.banned ? `
+                        <button class="btn-secondary" onclick="banKey(${key.id})">
+                            <i class="fas fa-ban"></i>
+                            Ban
+                        </button>
+                        ` : ""}
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
 
-.sidebar-header i {
-    font-size: 2rem;
-    color: #ff2a2a;
-}
+        // Update statistics
+        function updateStats() {
+            const totalKeys = allKeys.length;
+            const activeKeys = allKeys.filter(k => !k.banned && new Date(k.expiresAt) > new Date()).length;
+            const bannedKeys = allKeys.filter(k => k.banned).length;
+            const expiredKeys = allKeys.filter(k => !k.banned && new Date(k.expiresAt) < new Date()).length;
 
-.sidebar-header h2 {
-    font-size: 1.5rem;
-    font-weight: bold;
-    background: linear-gradient(135deg, #ff2a2a, #ff6b6b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
+            document.getElementById("totalKeys").textContent = totalKeys;
+            document.getElementById("activeKeys").textContent = activeKeys;
+            document.getElementById("bannedKeys").textContent = bannedKeys;
+            document.getElementById("expiredKeys").textContent = expiredKeys;
+        }
 
-.nav-section {
-    margin-bottom: 30px;
-}
+        // Ban key function
+        async function banKey(keyId) {
+            if (!confirm("Are you sure you want to ban this key?")) return;
 
-.nav-section h3 {
-    color: #666;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 15px;
-    padding-left: 10px;
-}
+            try {
+                const res = await fetch(`/api/keys/${keyId}/ban`, {
+                    method: "POST"
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    loadKeys();
+                } else {
+                    alert("Failed to ban key");
+                }
+            } catch (error) {
+                alert("Failed to ban key");
+            }
+        }
 
-.nav-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 15px;
-    color: #ccc;
-    text-decoration: none;
-    border-radius: 8px;
-    margin-bottom: 5px;
-    transition: all 0.3s;
-}
+        // Search functionality
+        searchInput.addEventListener("input", (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredKeys = allKeys.filter(key => 
+                key.key.toLowerCase().includes(searchTerm) ||
+                key.duration.toLowerCase().includes(searchTerm) ||
+                key.status.toLowerCase().includes(searchTerm)
+            );
+            displayKeys(filteredKeys);
+        });
 
-.nav-item:hover, .nav-item.active {
-    background: linear-gradient(135deg, #ff2a2a, #ff6b6b);
-    color: white;
-}
+        // Logout function
+        function logout() {
+            localStorage.removeItem("eclipse_auth");
+            window.location.reload();
+        }
 
-.nav-item i {
-    width: 20px;
-    text-align: center;
-}
+        // Check if already logged in
+        if (localStorage.getItem("eclipse_auth")) {
+            loginScreen.classList.add("hidden");
+            panelBox.classList.remove("hidden");
+            loadKeys();
+        }
 
-/* Main Content */
-.main-content {
-    flex: 1;
-    padding: 30px;
-    background: #0c0c0c;
-    overflow-y: auto;
-}
-
-.content-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #ff2a2a22;
-}
-
-.content-header h1 {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #fff;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 15px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    border: 1px solid #ff2a2a22;
-}
-
-.user-info i {
-    font-size: 1.2rem;
-    color: #ff2a2a;
-}
-
-/* Stats Grid */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-}
-
-.stat-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid #ff2a2a22;
-    border-radius: 12px;
-    padding: 25px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    transition: all 0.3s;
-}
-
-.stat-card:hover {
-    transform: translateY(-5px);
-    border-color: #ff2a2a;
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.stat-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #ff2a2a, #ff6b6b);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-}
-
-.stat-info h3 {
-    color: #888;
-    font-size: 0.9rem;
-    margin-bottom: 5px;
-}
-
-.stat-info span {
-    font-size: 2rem;
-    font-weight: bold;
-    background: linear-gradient(135deg, #ff2a2a, #ff6b6b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* Cards */
-.card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid #ff2a2a22;
-    border-radius: 12px;
-    padding: 25px;
-    margin-bottom: 30px;
-}
-
-.card h2 {
-    margin-bottom: 20px;
-    font-size: 1.3rem;
-    color: #fff;
-}
-
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-/* Generate Form */
-.generate-form {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.generate-form input,
-.generate-form select {
-    padding: 12px 16px;
-    border: 1px solid #ff2a2a33;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    color: #fff;
-    font-size: 14px;
-}
-
-.generate-form input:focus,
-.generate-form select:focus {
-    outline: none;
-    border-color: #ff2a2a;
-}
-
-.generate-form input {
-    width: 100px;
-}
-
-.generate-form select {
-    width: 150px;
-}
-
-.btn-primary {
-    padding: 12px 24px;
-    background: linear-gradient(135deg, #ff2a2a, #ff6b6b);
-    border: none;
-    border-radius: 8px;
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.btn-primary:hover {
-    background: linear-gradient(135deg, #ff1a1a, #ff5b5b);
-    transform: translateY(-2px);
-}
-
-.btn-secondary {
-    padding: 10px 20px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid #ff2a2a33;
-    border-radius: 8px;
-    color: #ccc;
-    cursor: pointer;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: #ff2a2a;
-}
-
-.generated-key {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid #ff2a2a33;
-    border-radius: 8px;
-    padding: 20px;
-    margin-top: 20px;
-}
-
-.generated-key h4 {
-    margin-bottom: 10px;
-    color: #888;
-}
-
-.generated-key code {
-    display: block;
-    background: rgba(255, 255, 255, 0.05);
-    padding: 15px;
-    border-radius: 6px;
-    margin-bottom: 15px;
-    font-family: 'Courier New', monospace;
-    font-size: 1.1rem;
-    color: #ff2a2a;
-    border: 1px solid #ff2a2a33;
-}
-
-/* Table */
-.table-actions {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-}
-
-.table-actions input {
-    padding: 10px 15px;
-    border: 1px solid #ff2a2a33;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.05);
-    color: #fff;
-}
-
-.table-actions input:focus {
-    outline: none;
-    border-color: #ff2a2a;
-}
-
-.table-container {
-    overflow-x: auto;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th, td {
-    padding: 15px;
-    text-align: left;
-    border-bottom: 1px solid #ff2a2a22;
-}
-
-th {
-    color: #888;
-    font-weight: 600;
-    font-size: 0.9rem;
-}
-
-tbody tr:hover {
-    background: rgba(255, 255, 255, 0.02);
-}
-
-.status-badge {
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-.status-active {
-    background: rgba(0, 255, 0, 0.1);
-    color: #00ff00;
-}
-
-.status-banned {
-    background: rgba(255, 42, 42, 0.1);
-    color: #ff2a2a;
-}
-
-.status-expired {
-    background: rgba(255, 165, 0, 0.1);
-    color: #ffa500;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .sidebar {
-        width: 100%;
-        position: fixed;
-        z-index: 1000;
-        transform: translateX(-100%);
-        transition: transform 0.3s;
-    }
-    
-    .main-content {
-        margin-left: 0;
-        padding: 20px;
-    }
-    
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .generate-form {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .card-header {
-        flex-direction: column;
-        gap: 15px;
-        align-items: stretch;
-    }
-}
+        // Enter key to login
+        adminPass.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                loginBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
