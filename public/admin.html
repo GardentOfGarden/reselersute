@@ -44,6 +44,10 @@
                             <i class="fas fa-ban"></i>
                             Banned Keys
                         </a>
+                        <a href="#" class="nav-item" onclick="showSection('hwid')">
+                            <i class="fas fa-microchip"></i>
+                            HWID Management
+                        </a>
                     </div>
                     <div class="nav-section">
                         <h3>Settings</h3>
@@ -81,6 +85,13 @@
                                 <option value="2592000000">1 Month</option>
                                 <option value="31536000000">1 Year</option>
                             </select>
+                            <select id="hwidLimitSelect">
+                                <option value="1">1 HWID</option>
+                                <option value="2">2 HWID</option>
+                                <option value="3">3 HWID</option>
+                                <option value="5">5 HWID</option>
+                                <option value="10">10 HWID</option>
+                            </select>
                             <button id="generateBtn" class="btn-primary">
                                 <i class="fas fa-plus"></i>
                                 Generate Key
@@ -100,7 +111,6 @@
                         <div class="card-header">
                             <h2><i class="fas fa-key"></i> All Keys</h2>
                             <div class="header-actions">
-                                <input type="text" id="searchInput" placeholder="Search keys...">
                                 <button class="btn-secondary" onclick="loadKeys()">
                                     <i class="fas fa-sync-alt"></i>
                                     Refresh
@@ -108,19 +118,7 @@
                             </div>
                         </div>
                         <div class="keys-list">
-                            <table class="keys-table">
-                                <thead>
-                                    <tr>
-                                        <th>Key</th>
-                                        <th>Created</th>
-                                        <th>Expires</th>
-                                        <th>HWID Lock</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="keysList"></tbody>
-                            </table>
+                            <ul id="keysList"></ul>
                         </div>
                     </div>
                 </div>
@@ -129,19 +127,38 @@
                     <div class="card">
                         <h2><i class="fas fa-ban"></i> Banned Keys</h2>
                         <div class="keys-list">
-                            <table class="keys-table">
-                                <thead>
-                                    <tr>
-                                        <th>Key</th>
-                                        <th>Created</th>
-                                        <th>Expires</th>
-                                        <th>HWID</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="bannedList"></tbody>
-                            </table>
+                            <ul id="bannedList"></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="hwidSection" class="section hidden">
+                    <div class="card">
+                        <h2><i class="fas fa-microchip"></i> HWID Management</h2>
+                        <div class="input-group">
+                            <input type="text" id="keySearch" placeholder="Enter key to manage HWID">
+                            <button onclick="searchKeyHWID()">Search</button>
+                        </div>
+                        <div id="hwidKeyInfo" class="hidden">
+                            <h3>Key: <code id="currentKeyValue"></code></h3>
+                            <div class="hwid-status">
+                                <span>HWID Lock: <span id="hwidLockStatus">Disabled</span></span>
+                                <button id="toggleHwidLock" class="btn-small" onclick="toggleHWIDLock()">Enable</button>
+                            </div>
+                            <div class="hwid-limit">
+                                <span>Max HWID: <span id="currentHwidLimit">1</span></span>
+                                <input type="number" id="newHwidLimit" min="1" max="10" value="1">
+                                <button class="btn-small" onclick="setHwidLimit()">Set Limit</button>
+                            </div>
+                            <div class="hwid-list-container">
+                                <h4>Associated HWIDs</h4>
+                                <ul id="hwidList"></ul>
+                                <div class="hwid-actions">
+                                    <input type="text" id="newHwid" placeholder="Add new HWID">
+                                    <button onclick="addHWID()">Add HWID</button>
+                                    <button class="btn-danger" onclick="clearHWIDs()">Clear All</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -177,6 +194,500 @@
         </div>
     </div>
 
-    <script src="admin.js"></script>
+    <script>
+        let allKeys = [];
+        let currentSection = 'dashboard';
+        let currentManagedKey = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            bindEvents();
+            checkAuth();
+            loadSettings();
+        }
+
+        function bindEvents() {
+            document.getElementById('loginBtn').addEventListener('click', login);
+            document.getElementById('adminPass').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') login();
+            });
+            document.getElementById('generateBtn').addEventListener('click', generateKey);
+            document.getElementById('copyKeyBtn').addEventListener('click', copyKey);
+        }
+
+        async function login() {
+            const password = document.getElementById('adminPass').value;
+            const message = document.getElementById('loginMsg');
+
+            if (!password) {
+                message.textContent = "Please enter password";
+                return;
+            }
+
+            try {
+                const res = await fetch("/api/login", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ password })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    document.getElementById('loginBox').classList.add("hidden");
+                    document.getElementById('panelBox').classList.remove("hidden");
+                    localStorage.setItem('eclipse_auth', 'true');
+                    loadKeys();
+                } else {
+                    message.textContent = data.message || "Wrong password!";
+                }
+            } catch (error) {
+                message.textContent = "Login failed!";
+            }
+        }
+
+        function checkAuth() {
+            const isAuthenticated = localStorage.getItem('eclipse_auth');
+            if (isAuthenticated) {
+                document.getElementById('loginBox').classList.add("hidden");
+                document.getElementById('panelBox').classList.remove("hidden");
+                loadKeys();
+            }
+        }
+
+        async function loadKeys() {
+            try {
+                const res = await fetch("/api/keys");
+                allKeys = await res.json();
+                displayKeys(allKeys);
+                loadBannedKeys();
+            } catch (error) {
+                console.error("Failed to load keys:", error);
+            }
+        }
+
+        function displayKeys(keys) {
+            const keysList = document.getElementById('keysList');
+            keysList.innerHTML = '';
+
+            keys.forEach(key => {
+                const li = document.createElement('li');
+                li.className = 'key-item';
+                
+                li.innerHTML = `
+                    <div class="key-info">
+                        <code class="key-value">${key.value}</code>
+                        <div class="key-details">
+                            <span class="key-expiry">${key.expiresAt ? new Date(key.expiresAt).toLocaleDateString() : "No Expiry"}</span>
+                            <span class="key-status ${key.banned ? 'banned' : 'active'}">
+                                ${key.banned ? "Banned" : "Active"}
+                            </span>
+                            ${key.hwidLocked ? '<span class="key-status hwid-locked"><i class="fas fa-microchip"></i> HWID Locked</span>' : ''}
+                        </div>
+                    </div>
+                    <div class="key-actions">
+                        ${!key.banned ? `
+                        <button class="btn-secondary btn-small" onclick="banKey('${key.value}')">
+                            <i class="fas fa-ban"></i>
+                            Ban
+                        </button>
+                        ` : ''}
+                        <button class="btn-secondary btn-small" onclick="manageKeyHWID('${key.value}')">
+                            <i class="fas fa-microchip"></i>
+                            HWID
+                        </button>
+                        <button class="btn-secondary btn-small btn-danger" onclick="deleteKey('${key.value}')">
+                            <i class="fas fa-trash"></i>
+                            Delete
+                        </button>
+                    </div>
+                `;
+                
+                keysList.appendChild(li);
+            });
+        }
+
+        function loadBannedKeys() {
+            const bannedKeys = allKeys.filter(key => key.banned);
+            const bannedList = document.getElementById('bannedList');
+            
+            if (!bannedList) return;
+            
+            bannedList.innerHTML = '';
+
+            bannedKeys.forEach(key => {
+                const li = document.createElement('li');
+                li.className = 'key-item';
+                
+                li.innerHTML = `
+                    <div class="key-info">
+                        <code class="key-value">${key.value}</code>
+                        <div>
+                            <span class="key-expiry">${key.expiresAt ? new Date(key.expiresAt).toLocaleDateString() : "No Expiry"}</span>
+                            <span class="key-status banned">Banned</span>
+                        </div>
+                    </div>
+                    <div class="key-actions">
+                        <button class="btn-secondary btn-small" onclick="unbanKey('${key.value}')">
+                            <i class="fas fa-check"></i>
+                            Unban
+                        </button>
+                        <button class="btn-secondary btn-small btn-danger" onclick="deleteKey('${key.value}')">
+                            <i class="fas fa-trash"></i>
+                            Delete
+                        </button>
+                    </div>
+                `;
+                
+                bannedList.appendChild(li);
+            });
+        }
+
+        async function generateKey() {
+            const durationMs = parseInt(document.getElementById('durationSelect').value);
+            const maxHwid = parseInt(document.getElementById('hwidLimitSelect').value);
+            
+            try {
+                const res = await fetch("/api/keys", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ durationMs, maxHwid })
+                });
+                
+                const key = await res.json();
+                document.getElementById('generatedKeyText').textContent = key.value;
+                document.getElementById('genMsg').classList.remove("hidden");
+                loadKeys();
+            } catch (error) {
+                alert("Failed to generate key");
+            }
+        }
+
+        function copyKey() {
+            const key = document.getElementById('generatedKeyText').textContent;
+            navigator.clipboard.writeText(key).then(() => {
+                alert("Key copied to clipboard!");
+            });
+        }
+
+        async function banKey(keyValue) {
+            if (!confirm("Are you sure you want to ban this key?")) return;
+
+            try {
+                const res = await fetch("/api/ban", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ value: keyValue })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    loadKeys();
+                } else {
+                    alert("Failed to ban key");
+                }
+            } catch (error) {
+                alert("Failed to ban key");
+            }
+        }
+
+        async function unbanKey(keyValue) {
+            if (!confirm("Are you sure you want to unban this key?")) return;
+
+            try {
+                const res = await fetch("/api/unban", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ value: keyValue })
+                });
+                
+                if (res.ok) {
+                    loadKeys();
+                } else {
+                    alert("Failed to unban key");
+                }
+            } catch (error) {
+                alert("Failed to unban key");
+            }
+        }
+
+        async function deleteKey(keyValue) {
+            if (!confirm("Are you sure you want to delete this key? This action cannot be undone!")) return;
+
+            try {
+                const res = await fetch("/api/keys/delete", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ value: keyValue })
+                });
+                
+                if (res.ok) {
+                    loadKeys();
+                } else {
+                    alert("Failed to delete key");
+                }
+            } catch (error) {
+                alert("Failed to delete key");
+            }
+        }
+
+        async function searchKeyHWID() {
+            const keyValue = document.getElementById('keySearch').value;
+            if (!keyValue) {
+                alert("Please enter a key to search");
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/keys/${keyValue}`);
+                if (res.ok) {
+                    currentManagedKey = await res.json();
+                    displayHWIDManagement();
+                } else {
+                    alert("Key not found");
+                }
+            } catch (error) {
+                alert("Error searching for key");
+            }
+        }
+
+        function displayHWIDManagement() {
+            if (!currentManagedKey) return;
+
+            document.getElementById('currentKeyValue').textContent = currentManagedKey.value;
+            document.getElementById('hwidLockStatus').textContent = currentManagedKey.hwidLocked ? "Enabled" : "Disabled";
+            document.getElementById('hwidLockStatus').className = currentManagedKey.hwidLocked ? "status-enabled" : "status-disabled";
+            document.getElementById('toggleHwidLock').textContent = currentManagedKey.hwidLocked ? "Disable" : "Enable";
+            document.getElementById('currentHwidLimit').textContent = currentManagedKey.maxHwid;
+            document.getElementById('newHwidLimit').value = currentManagedKey.maxHwid;
+
+            const hwidList = document.getElementById('hwidList');
+            hwidList.innerHTML = '';
+
+            if (currentManagedKey.hwids && currentManagedKey.hwids.length > 0) {
+                currentManagedKey.hwids.forEach(hwid => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <code>${hwid}</code>
+                        <button class="btn-small btn-danger" onclick="removeHWID('${hwid}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                    hwidList.appendChild(li);
+                });
+            } else {
+                hwidList.innerHTML = '<li>No HWIDs associated with this key</li>';
+            }
+
+            document.getElementById('hwidKeyInfo').classList.remove('hidden');
+        }
+
+        async function toggleHWIDLock() {
+            if (!currentManagedKey) return;
+
+            try {
+                const res = await fetch("/api/hwid/manage", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ 
+                        value: currentManagedKey.value, 
+                        action: "toggle-lock" 
+                    })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    currentManagedKey = data.key;
+                    displayHWIDManagement();
+                } else {
+                    alert("Failed to toggle HWID lock");
+                }
+            } catch (error) {
+                alert("Error toggling HWID lock");
+            }
+        }
+
+        async function setHwidLimit() {
+            if (!currentManagedKey) return;
+
+            const newLimit = parseInt(document.getElementById('newHwidLimit').value);
+            if (isNaN(newLimit) || newLimit < 1) {
+                alert("Please enter a valid limit");
+                return;
+            }
+
+            try {
+                const res = await fetch("/api/hwid/manage", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ 
+                        value: currentManagedKey.value, 
+                        action: "set-limit",
+                        hwid: newLimit
+                    })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    currentManagedKey = data.key;
+                    displayHWIDManagement();
+                } else {
+                    alert("Failed to set HWID limit");
+                }
+            } catch (error) {
+                alert("Error setting HWID limit");
+            }
+        }
+
+        async function addHWID() {
+            if (!currentManagedKey) return;
+
+            const newHwid = document.getElementById('newHwid').value;
+            if (!newHwid) {
+                alert("Please enter a HWID");
+                return;
+            }
+
+            try {
+                const res = await fetch("/api/hwid/manage", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ 
+                        value: currentManagedKey.value, 
+                        action: "add",
+                        hwid: newHwid
+                    })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    currentManagedKey = data.key;
+                    document.getElementById('newHwid').value = '';
+                    displayHWIDManagement();
+                } else {
+                    alert("Failed to add HWID");
+                }
+            } catch (error) {
+                alert("Error adding HWID");
+            }
+        }
+
+        async function removeHWID(hwid) {
+            if (!currentManagedKey) return;
+
+            try {
+                const res = await fetch("/api/hwid/manage", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ 
+                        value: currentManagedKey.value, 
+                        action: "remove",
+                        hwid: hwid
+                    })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    currentManagedKey = data.key;
+                    displayHWIDManagement();
+                } else {
+                    alert("Failed to remove HWID");
+                }
+            } catch (error) {
+                alert("Error removing HWID");
+            }
+        }
+
+        async function clearHWIDs() {
+            if (!currentManagedKey) return;
+
+            if (!confirm("Are you sure you want to clear all HWIDs for this key?")) return;
+
+            try {
+                const res = await fetch("/api/hwid/manage", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ 
+                        value: currentManagedKey.value, 
+                        action: "clear"
+                    })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    currentManagedKey = data.key;
+                    displayHWIDManagement();
+                } else {
+                    alert("Failed to clear HWIDs");
+                }
+            } catch (error) {
+                alert("Error clearing HWIDs");
+            }
+        }
+
+        function manageKeyHWID(keyValue) {
+            document.getElementById('keySearch').value = keyValue;
+            searchKeyHWID();
+            showSection('hwid');
+        }
+
+        function showSection(section) {
+            document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(section + 'Section').classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`[onclick="showSection('${section}')"]`).classList.add('active');
+            document.getElementById('sectionTitle').textContent = 
+                section.charAt(0).toUpperCase() + section.slice(1);
+            currentSection = section;
+            
+            if (section === 'banned') {
+                loadBannedKeys();
+            }
+        }
+
+        function loadSettings() {
+            const autoRefresh = localStorage.getItem('autoRefresh') || '30';
+            const theme = localStorage.getItem('theme') || 'dark-red';
+            
+            document.getElementById('autoRefresh').value = autoRefresh;
+            document.getElementById('theme').value = theme;
+        }
+
+        function saveSettings() {
+            const autoRefresh = document.getElementById('autoRefresh').value;
+            const theme = document.getElementById('theme').value;
+            
+            localStorage.setItem('autoRefresh', autoRefresh);
+            localStorage.setItem('theme', theme);
+            
+            alert('Settings saved successfully!');
+            applyTheme(theme);
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+        }
+
+        function logout() {
+            localStorage.removeItem('eclipse_auth');
+            window.location.reload();
+        }
+
+        document.getElementById('adminPass').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+
+        setInterval(() => {
+            if (currentSection === 'dashboard') {
+                loadKeys();
+            }
+        }, 30000);
+    </script>
 </body>
 </html>
