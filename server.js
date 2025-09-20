@@ -127,12 +127,17 @@ app.post("/api/check", (req, res) => {
 });
 
 app.post("/api/screenshot", (req, res) => {
-  const { key, screenshot } = req.body;
+  const { key, hwid, screenshot } = req.body;
   const keys = loadKeys();
   const keyData = keys.find((k) => k.value === key);
   
   if (!keyData) {
     return res.status(404).json({ success: false, message: "Key not found" });
+  }
+  
+  // Проверяем HWID
+  if (keyData.hwid && keyData.hwid !== hwid) {
+    return res.status(403).json({ success: false, message: "HWID mismatch" });
   }
   
   const screenshotId = Date.now() + '-' + Math.random().toString(36).substring(2, 10);
@@ -178,6 +183,18 @@ app.get("/api/screenshot/:key/:id", (req, res) => {
   res.sendFile(screenshot.path);
 });
 
+app.get("/api/screenshots/:key", (req, res) => {
+  const { key } = req.params;
+  const keys = loadKeys();
+  const keyData = keys.find((k) => k.value === key);
+  
+  if (!keyData) {
+    return res.status(404).json({ error: "Key not found" });
+  }
+  
+  res.json(keyData.screenshots || []);
+});
+
 app.get("/api/keys/:value", (req, res) => {
   const { value } = req.params;
   const keys = loadKeys();
@@ -201,6 +218,12 @@ app.get("/api/stats", (req, res) => {
     bannedKeys,
     expiredKeys
   });
+});
+
+app.post("/api/live/data", (req, res) => {
+  // Логирование данных мониторинга
+  console.log("Live data received:", req.body);
+  res.json({ success: true });
 });
 
 app.listen(PORT, () => {
