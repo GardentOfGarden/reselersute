@@ -19,12 +19,10 @@
             --dark: #0a0a0a;
             --light: #f8f9fa;
             --background: #0f0f0f;
-            --card-bg: #1a1a1a;
+            --card-bg: rgba(30, 30, 30, 0.8);
             --text: #ffffff;
             --text-muted: #6c757d;
             --border: rgba(255, 255, 255, 0.1);
-            --glass-bg: rgba(20, 20, 20, 0.9);
-            --glass-border: rgba(255, 255, 255, 0.15);
         }
 
         [data-theme="dark-blue"] {
@@ -58,9 +56,6 @@
             min-height: 100vh;
             overflow-x: hidden;
             line-height: 1.6;
-            background-image: 
-                radial-gradient(circle at 15% 50%, rgba(255, 42, 42, 0.03) 0%, transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(42, 106, 255, 0.03) 0%, transparent 25%);
         }
 
         /* Анимации */
@@ -71,7 +66,7 @@
 
         @keyframes glow {
             0% { box-shadow: 0 0 5px var(--primary-light); }
-            50% { box-shadow: 0 0 20px var(--primary-light), 0 0 30px rgba(255, 42, 42, 0.3); }
+            50% { box-shadow: 0 0 20px var(--primary-light); }
             100% { box-shadow: 0 0 5px var(--primary-light); }
         }
 
@@ -84,12 +79,6 @@
         @keyframes rotate {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.8; }
-            100% { transform: scale(1); opacity: 1; }
         }
 
         /* Login screen */
@@ -115,60 +104,42 @@
         }
 
         .login-box {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid var(--border);
             border-radius: 16px;
             padding: 40px;
             text-align: center;
-            width: 440px;
+            width: 400px;
             animation: fadeIn 0.6s ease-out;
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(10px);
             position: relative;
             z-index: 1;
-            box-shadow: 
-                0 15px 35px rgba(0, 0, 0, 0.5),
-                inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         .logo {
             margin-bottom: 30px;
-            position: relative;
-        }
-
-        .logo::after {
-            content: '';
-            position: absolute;
-            bottom: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 50px;
-            height: 3px;
-            background: var(--primary);
-            border-radius: 3px;
         }
 
         .logo i {
-            font-size: 4rem;
+            font-size: 3.5rem;
             color: var(--primary);
             margin-bottom: 15px;
-            text-shadow: 0 0 15px var(--primary-light);
-            animation: pulse 3s infinite ease-in-out;
+            text-shadow: 0 0 10px var(--primary-light);
         }
 
         .logo h1 {
-            font-size: 2.8rem;
-            font-weight: 800;
-            background: linear-gradient(to right, var(--primary), var(--primary-light));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
             letter-spacing: -0.5px;
+            text-shadow: 0 0 10px var(--primary-light);
         }
 
         .subtitle {
             color: var(--text-muted);
             margin-bottom: 30px;
-            font-size: 1.1rem;
-            font-weight: 300;
+            font-size: 1rem;
         }
 
         .theme-selector {
@@ -200,18 +171,18 @@
         .input-group {
             display: flex;
             flex-direction: column;
-            gap: 18px;
+            gap: 15px;
             margin-bottom: 25px;
         }
 
         .input-group input, .input-group select {
-            padding: 16px 20px;
+            padding: 14px 18px;
             border: 1px solid var(--border);
-            border-radius: 12px;
-            background: rgba(15, 15, 15, 0.6);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
             color: var(--text);
-            font-size: 16px;
-            transition: all 0.3s ease;
+            font-size: 15px;
+            transition: all 0.2s ease;
         }
 
         .input-group input::placeholder {
@@ -222,42 +193,25 @@
             outline: none;
             border-color: var(--primary);
             background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 0 3px rgba(255, 42, 42, 0.15);
-            transform: translateY(-2px);
+            box-shadow: 0 0 0 3px rgba(255, 42, 42, 0.1);
         }
 
         .input-group button {
-            padding: 16px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 14px;
+            background: var(--primary);
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             color: white;
             font-weight: 600;
-            font-size: 16px;
+            font-size: 15px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .input-group button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: 0.5s;
+            transition: all 0.2s ease;
         }
 
         .input-group button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 7px 20px rgba(255, 42, 42, 0.4);
-        }
-
-        .input-group button:hover::before {
-            left: 100%;
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 42, 42, 0.3);
         }
 
         /* Main panel */
@@ -951,7 +905,7 @@
                 
                 <div class="generate-form">
                     <input type="text" placeholder="Дней активности">
-                    <input type="text" placeholder="Количество ключей">
+                    <input type="text" placeholder>Количество ключей">
                     <select>
                         <option>Базовый доступ</option>
                         <option>Премиум доступ</option>
