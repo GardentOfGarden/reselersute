@@ -3,395 +3,208 @@ const fs = require("fs");
 const path = require("path");
 const cors = require("cors");
 const crypto = require("crypto");
-const multer = require("multer");
-const { exec } = require("child_process");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 app.use(express.static("public"));
-app.use("/screenshots", express.static("screenshots"));
 
 const dbFile = path.join(__dirname, "keys.json");
 const screenshotsDir = path.join(__dirname, "screenshots");
 
 if (!fs.existsSync(screenshotsDir)) {
-    fs.mkdirSync(screenshotsDir, { recursive: true });
+  fs.mkdirSync(screenshotsDir, { recursive: true });
 }
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, screenshotsDir);
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, 'screenshot-' + uniqueSuffix + '.jpg');
-    }
-});
-
-const upload = multer({ 
-    storage: storage,
-    limits: {
-        fileSize: 10 * 1024 * 1024 // 10MB limit
-    }
-});
-
 function loadKeys() {
-    if (!fs.existsSync(dbFile)) {
-        fs.writeFileSync(dbFile, JSON.stringify([]));
-        return [];
-    }
-    try {
-        return JSON.parse(fs.readFileSync(dbFile, "utf-8"));
-    } catch (error) {
-        console.error("Error loading keys:", error);
-        return [];
-    }
+  if (!fs.existsSync(dbFile)) fs.writeFileSync(dbFile, JSON.stringify([]));
+  return JSON.parse(fs.readFileSync(dbFile, "utf-8"));
 }
 
 function saveKeys(keys) {
-    try {
-        fs.writeFileSync(dbFile, JSON.stringify(keys, null, 2));
-        return true;
-    } catch (error) {
-        console.error("Error saving keys:", error);
-        return false;
-    }
+  fs.writeFileSync(dbFile, JSON.stringify(keys, null, 2));
 }
 
 function generateKey(durationMs) {
-    const timestamp = Date.now();
-    const randomPart = Math.random().toString(36).substring(2, 10).toUpperCase();
-    return {
-        value: `ECL-${timestamp.toString(36).toUpperCase()}-${randomPart}`,
-        banned: false,
-        expiresAt: durationMs ? new Date(Date.now() + durationMs).toISOString() : null,
-        createdAt: new Date().toISOString(),
-        hwidLocked: true,
-        maxHwid: 1,
-        hwids: [],
-        usedCount: 0,
-        lastUsed: null,
-        screenshots: []
-    };
+  return {
+    value: "ECLIPSE-" + Math.random().toString(36).substring(2, 10).toUpperCase() + 
+           "-" + Math.random().toString(36).substring(2, 10).toUpperCase() + 
+           "-" + Math.random().toString(36).substring(2, 10).toUpperCase(),
+    banned: false,
+    expiresAt: durationMs ? new Date(Date.now() + durationMs).toISOString() : null,
+    createdAt: new Date().toISOString(),
+    hwid: null,
+    activations: 0,
+    maxActivations: 1,
+    lastActivation: null,
+    screenshots: []
+  };
 }
 
 app.post("/api/login", (req, res) => {
-    const { password } = req.body;
-    if (password === ADMIN_PASSWORD) {
-        return res.json({ success: true, message: "Login successful" });
-    }
-    res.status(401).json({ success: false, message: "Wrong password" });
+  const { password } = req.body;
+  if (password === ADMIN_PASSWORD) {
+    return res.json({ success: true });
+  }
+  res.json({ success: false, message: "Wrong password" });
 });
 
 app.get("/api/keys", (req, res) => {
-    try {
-        const keys = loadKeys();
-        res.json(keys);
-    } catch (error) {
-        res.status(500).json({ error: "Failed to load keys" });
-    }
-});
-
-app.get("/api/keys/:value", (req, res) => {
-    try {
-        const { value } = req.params;
-        const keys = loadKeys();
-        const key = keys.find(k => k.value === value);
-        
-        if (!key) {
-            return res.status(404).json({ error: "Key not found" });
-        }
-        
-        res.json(key);
-    } catch (error) {
-        res.status(500).json({ error: "Failed to load key" });
-    }
+  res.json(loadKeys());
 });
 
 app.post("/api/keys", (req, res) => {
-    try {
-        const { durationMs, maxHwid = 1 } = req.body;
-        const keys = loadKeys();
-        const key = generateKey(durationMs);
-        key.maxHwid = parseInt(maxHwid) || 1;
-        
-        keys.push(key);
-        if (saveKeys(keys)) {
-            res.json(key);
-        } else {
-            res.status(500).json({ error: "Failed to save key" });
-        }
-    } catch (error) {
-        res.status(500).json({ error: "Failed to generate key" });
-    }
+  const { durationMs, maxActivations = 1 } = req.body;
+  const keys = loadKeys();
+  const key = generateKey(durationMs);
+  key.maxActivations = maxActivations;
+  keys.push(key);
+  saveKeys(keys);
+  res.json(key);
 });
 
 app.post("/api/ban", (req, res) => {
-    try {
-        const { value } = req.body;
-        const keys = loadKeys();
-        const updatedKeys = keys.map(k => 
-            k.value === value ? { ...k, banned: true } : k
-        );
-        
-        if (saveKeys(updatedKeys)) {
-            res.json({ success: true, message: "Key banned successfully" });
-        } else {
-            res.status(500).json({ error: "Failed to ban key" });
-        }
-    } catch (error) {
-        res.status(500).json({ error: "Failed to ban key" });
-    }
+  const { value } = req.body;
+  let keys = loadKeys();
+  keys = keys.map((k) => (k.value === value ? { ...k, banned: true } : k));
+  saveKeys(keys);
+  res.json({ success: true });
 });
 
 app.post("/api/unban", (req, res) => {
-    try {
-        const { value } = req.body;
-        const keys = loadKeys();
-        const updatedKeys = keys.map(k => 
-            k.value === value ? { ...k, banned: false } : k
-        );
-        
-        if (saveKeys(updatedKeys)) {
-            res.json({ success: true, message: "Key unbanned successfully" });
-        } else {
-            res.status(500).json({ error: "Failed to unban key" });
-        }
-    } catch (error) {
-        res.status(500).json({ error: "Failed to unban key" });
-    }
+  const { value } = req.body;
+  let keys = loadKeys();
+  keys = keys.map((k) => (k.value === value ? { ...k, banned: false } : k));
+  saveKeys(keys);
+  res.json({ success: true });
 });
 
 app.post("/api/keys/delete", (req, res) => {
-    try {
-        const { value } = req.body;
-        const keys = loadKeys();
-        const filteredKeys = keys.filter(k => k.value !== value);
-        
-        if (saveKeys(filteredKeys)) {
-            res.json({ success: true, message: "Key deleted successfully" });
-        } else {
-            res.status(500).json({ error: "Failed to delete key" });
-        }
-    } catch (error) {
-        res.status(500).json({ error: "Failed to delete key" });
-    }
+  const { value } = req.body;
+  let keys = loadKeys();
+  const initialLength = keys.length;
+  keys = keys.filter(k => k.value !== value);
+  
+  if (keys.length < initialLength) {
+    saveKeys(keys);
+    res.json({ success: true, message: "Key deleted successfully" });
+  } else {
+    res.status(404).json({ success: false, message: "Key not found" });
+  }
 });
 
-app.post("/api/hwid/check", (req, res) => {
-    try {
-        const { value, hwid } = req.body;
-        const keys = loadKeys();
-        const keyIndex = keys.findIndex(k => k.value === value);
-        
-        if (keyIndex === -1) {
-            return res.json({ valid: false, reason: "not_found" });
-        }
-        
-        const key = keys[keyIndex];
-        
-        if (key.banned) {
-            return res.json({ valid: false, reason: "banned" });
-        }
-        
-        if (key.expiresAt && new Date(key.expiresAt) < new Date()) {
-            return res.json({ valid: false, reason: "expired" });
-        }
-        
-        if (key.hwidLocked) {
-            if (key.hwids.length === 0) {
-                keys[keyIndex].hwids.push(hwid);
-                keys[keyIndex].usedCount += 1;
-                keys[keyIndex].lastUsed = new Date().toISOString();
-                saveKeys(keys);
-                return res.json({ 
-                    valid: true, 
-                    firstTime: true,
-                    message: "HWID registered successfully" 
-                });
-            }
-            
-            if (!key.hwids.includes(hwid)) {
-                return res.json({ valid: false, reason: "hwid_mismatch" });
-            }
-        }
-        
-        keys[keyIndex].usedCount += 1;
-        keys[keyIndex].lastUsed = new Date().toISOString();
-        saveKeys(keys);
-        
-        res.json({ 
-            valid: true, 
-            firstTime: false,
-            message: "HWID verification successful" 
-        });
-    } catch (error) {
-        res.status(500).json({ error: "HWID check failed" });
-    }
+app.post("/api/check", (req, res) => {
+  const { value, hwid } = req.body;
+  const keys = loadKeys();
+  const key = keys.find((k) => k.value === value);
+  
+  if (!key) return res.json({ valid: false, reason: "not_found" });
+  if (key.banned) return res.json({ valid: false, reason: "banned" });
+  if (key.expiresAt && new Date(key.expiresAt) < new Date())
+    return res.json({ valid: false, reason: "expired" });
+  
+  if (key.hwid && key.hwid !== hwid)
+    return res.json({ valid: false, reason: "hwid_mismatch" });
+  
+  if (!key.hwid && key.activations >= key.maxActivations)
+    return res.json({ valid: false, reason: "max_activations" });
+  
+  if (!key.hwid) {
+    key.hwid = hwid;
+    key.activations += 1;
+    key.lastActivation = new Date().toISOString();
+    saveKeys(keys);
+  }
+  
+  res.json({ 
+    valid: true, 
+    expiresAt: key.expiresAt,
+    createdAt: key.createdAt
+  });
 });
 
-app.post("/api/hwid/manage", (req, res) => {
-    try {
-        const { value, action, hwid } = req.body;
-        const keys = loadKeys();
-        const keyIndex = keys.findIndex(k => k.value === value);
-        
-        if (keyIndex === -1) {
-            return res.status(404).json({ error: "Key not found" });
-        }
-        
-        switch (action) {
-            case "add":
-                if (keys[keyIndex].hwids.length >= keys[keyIndex].maxHwid) {
-                    return res.json({ error: "HWID limit reached" });
-                }
-                if (!keys[keyIndex].hwids.includes(hwid)) {
-                    keys[keyIndex].hwids.push(hwid);
-                }
-                break;
-                
-            case "remove":
-                keys[keyIndex].hwids = keys[keyIndex].hwids.filter(h => h !== hwid);
-                break;
-                
-            case "clear":
-                keys[keyIndex].hwids = [];
-                break;
-                
-            case "toggle-lock":
-                keys[keyIndex].hwidLocked = !keys[keyIndex].hwidLocked;
-                break;
-                
-            case "set-limit":
-                keys[keyIndex].maxHwid = parseInt(hwid) || 1;
-                break;
-                
-            default:
-                return res.status(400).json({ error: "Invalid action" });
-        }
-        
-        if (saveKeys(keys)) {
-            res.json({ success: true, key: keys[keyIndex] });
-        } else {
-            res.status(500).json({ error: "Failed to update HWID settings" });
-        }
-    } catch (error) {
-        res.status(500).json({ error: "HWID management failed" });
+app.post("/api/screenshot", (req, res) => {
+  const { key, screenshot } = req.body;
+  const keys = loadKeys();
+  const keyData = keys.find((k) => k.value === key);
+  
+  if (!keyData) {
+    return res.status(404).json({ success: false, message: "Key not found" });
+  }
+  
+  const screenshotId = Date.now() + '-' + Math.random().toString(36).substring(2, 10);
+  const screenshotPath = path.join(screenshotsDir, `${screenshotId}.png`);
+  
+  const base64Data = screenshot.replace(/^data:image\/png;base64,/, "");
+  
+  fs.writeFile(screenshotPath, base64Data, 'base64', (err) => {
+    if (err) {
+      console.error("Error saving screenshot:", err);
+      return res.status(500).json({ success: false, message: "Failed to save screenshot" });
     }
+    
+    keyData.screenshots.push({
+      id: screenshotId,
+      timestamp: new Date().toISOString(),
+      path: screenshotPath
+    });
+    
+    saveKeys(keys);
+    res.json({ success: true, id: screenshotId });
+  });
 });
 
-app.post("/api/screenshot", upload.single('screenshot'), (req, res) => {
-    try {
-        const { key, hwid } = req.body;
-        
-        if (!req.file) {
-            return res.status(400).json({ error: "No screenshot uploaded" });
-        }
-        
-        const keys = loadKeys();
-        const keyIndex = keys.findIndex(k => k.value === key);
-        
-        if (keyIndex !== -1) {
-            if (!keys[keyIndex].screenshots) {
-                keys[keyIndex].screenshots = [];
-            }
-            
-            keys[keyIndex].screenshots.push({
-                filename: req.file.filename,
-                hwid: hwid,
-                timestamp: new Date().toISOString(),
-                url: `/screenshots/${req.file.filename}`
-            });
-            
-            if (saveKeys(keys)) {
-                res.json({ 
-                    success: true, 
-                    filename: req.file.filename,
-                    url: `/screenshots/${req.file.filename}`
-                });
-            } else {
-                res.status(500).json({ error: "Failed to save screenshot info" });
-            }
-        } else {
-            res.status(404).json({ error: "Key not found" });
-        }
-    } catch (error) {
-        res.status(500).json({ error: "Screenshot upload failed" });
-    }
+app.get("/api/screenshot/:key/:id", (req, res) => {
+  const { key, id } = req.params;
+  const keys = loadKeys();
+  const keyData = keys.find((k) => k.value === key);
+  
+  if (!keyData) {
+    return res.status(404).send("Key not found");
+  }
+  
+  const screenshot = keyData.screenshots.find(s => s.id === id);
+  if (!screenshot) {
+    return res.status(404).send("Screenshot not found");
+  }
+  
+  if (!fs.existsSync(screenshot.path)) {
+    return res.status(404).send("Screenshot file not found");
+  }
+  
+  res.sendFile(screenshot.path);
 });
 
-app.get("/api/screenshots/:key", (req, res) => {
-    try {
-        const { key } = req.params;
-        const keys = loadKeys();
-        const keyData = keys.find(k => k.value === key);
-        
-        if (!keyData || !keyData.screenshots) {
-            return res.json([]);
-        }
-        
-        res.json(keyData.screenshots);
-    } catch (error) {
-        res.status(500).json({ error: "Failed to load screenshots" });
-    }
+app.get("/api/keys/:value", (req, res) => {
+  const { value } = req.params;
+  const keys = loadKeys();
+  const key = keys.find((k) => k.value === value);
+  
+  if (!key) return res.status(404).json({ error: "Key not found" });
+  
+  res.json(key);
 });
 
 app.get("/api/stats", (req, res) => {
-    try {
-        const keys = loadKeys();
-        const totalKeys = keys.length;
-        const activeKeys = keys.filter(k => !k.banned && (!k.expiresAt || new Date(k.expiresAt) > new Date())).length;
-        const bannedKeys = keys.filter(k => k.banned).length;
-        const expiredKeys = keys.filter(k => !k.banned && k.expiresAt && new Date(k.expiresAt) < new Date()).length;
-        const usedKeys = keys.filter(k => k.usedCount > 0).length;
-        const hwidLockedKeys = keys.filter(k => k.hwidLocked).length;
+  const keys = loadKeys();
+  const totalKeys = keys.length;
+  const activeKeys = keys.filter(k => !k.banned && (!k.expiresAt || new Date(k.expiresAt) > new Date())).length;
+  const bannedKeys = keys.filter(k => k.banned).length;
+  const expiredKeys = keys.filter(k => !k.banned && k.expiresAt && new Date(k.expiresAt) < new Date()).length;
 
-        res.json({
-            totalKeys,
-            activeKeys,
-            bannedKeys,
-            expiredKeys,
-            usedKeys,
-            hwidLockedKeys
-        });
-    } catch (error) {
-        res.status(500).json({ error: "Failed to load statistics" });
-    }
-});
-
-app.get("/api/health", (req, res) => {
-    res.json({ 
-        status: "OK", 
-        timestamp: new Date().toISOString(),
-        version: "2.0.0",
-        hwidSystem: "active"
-    });
-});
-
-app.delete("/api/screenshot/:filename", (req, res) => {
-    try {
-        const { filename } = req.params;
-        const filePath = path.join(screenshotsDir, filename);
-        
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-            res.json({ success: true, message: "Screenshot deleted" });
-        } else {
-            res.status(404).json({ error: "File not found" });
-        }
-    } catch (error) {
-        res.status(500).json({ error: "Failed to delete screenshot" });
-    }
+  res.json({
+    totalKeys,
+    activeKeys,
+    bannedKeys,
+    expiredKeys
+  });
 });
 
 app.listen(PORT, () => {
-    console.log(`🚀 Eclipse Panel running on port ${PORT}`);
-    console.log(`📊 Admin password: ${ADMIN_PASSWORD}`);
-    console.log(`🔑 API endpoints available at http://localhost:${PORT}/api`);
-    console.log(`🔒 HWID protection system activated`);
-    console.log(`📸 Screenshots directory: ${screenshotsDir}`);
+  console.log(`🚀 Eclipse Panel running on port ${PORT}`);
+  console.log(`📊 Admin password: ${ADMIN_PASSWORD}`);
+  console.log(`🔑 API endpoints available at http://localhost:${PORT}/api`);
 });
