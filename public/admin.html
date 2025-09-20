@@ -3,469 +3,433 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECLIPSE | Admin Panel</title>
+    <title>ECLIPSE CORE | HWID Admin System</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="dark-theme">
     <div class="container">
-        <!-- Login Screen -->
-        <div id="loginBox" class="login-container">
-            <div class="login-box">
-                <div class="logo">
-                    <i class="fas fa-fire"></i>
-                    <h1>ECLIPSE</h1>
+        <div id="authScreen" class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <div class="logo-pulse">
+                        <i class="fas fa-fingerprint"></i>
+                    </div>
+                    <h1>ECLIPSE <span class="gradient-text">CORE</span></h1>
+                    <p>HWID Protection System</p>
                 </div>
-                <p class="subtitle">Reseller Admin Panel</p>
-                <div class="input-group">
-                    <input type="password" id="adminPass" placeholder="Enter admin password">
-                    <button id="loginBtn">Login</button>
+                
+                <div class="auth-form">
+                    <div class="input-field">
+                        <i class="fas fa-key"></i>
+                        <input type="password" id="adminPassword" placeholder="Admin authentication key" autocomplete="off">
+                    </div>
+                    <button id="authButton" class="btn-auth">
+                        <span>Authenticate</span>
+                        <i class="fas fa-fingerprint"></i>
+                    </button>
                 </div>
-                <p id="loginMsg"></p>
+                
+                <div class="auth-footer">
+                    <div class="security-badge">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>HWID Protection Active</span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Main Panel -->
-        <div id="panelBox" class="main-panel hidden">
-            <!-- Sidebar -->
-            <div class="sidebar">
-                <div class="sidebar-header">
-                    <i class="fas fa-fire"></i>
-                    <h2>ECLIPSE</h2>
+        <div id="mainSystem" class="main-system hidden">
+            <nav class="system-nav">
+                <div class="nav-brand">
+                    <i class="fas fa-fingerprint"></i>
+                    <span>ECLIPSE CORE</span>
                 </div>
-                <nav class="sidebar-nav">
-                    <div class="nav-section">
-                        <h3>Dashboard</h3>
-                        <a href="#" class="nav-item active" onclick="showSection('dashboard')">
+                
+                <div class="nav-sections">
+                    <div class="nav-group">
+                        <label>Key Management</label>
+                        <a href="#" class="nav-item active" data-section="dashboard">
                             <i class="fas fa-key"></i>
-                            License Keys
+                            <span>Keys</span>
+                        </a>
+                        <a href="#" class="nav-item" data-section="generator">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Generator</span>
                         </a>
                     </div>
-                    <div class="nav-section">
-                        <h3>Management</h3>
-                        <a href="#" class="nav-item" onclick="showSection('banned')">
-                            <i class="fas fa-ban"></i>
-                            Banned Keys
+                    
+                    <div class="nav-group">
+                        <label>HWID System</label>
+                        <a href="#" class="nav-item" data-section="hwid">
+                            <i class="fas fa-fingerprint"></i>
+                            <span>HWID Monitor</span>
+                        </a>
+                        <a href="#" class="nav-item" data-section="activations">
+                            <i class="fas fa-chart-network"></i>
+                            <span>Activations</span>
                         </a>
                     </div>
-                    <div class="nav-section">
-                        <h3>Settings</h3>
-                        <a href="#" class="nav-item" onclick="showSection('settings')">
+                    
+                    <div class="nav-group">
+                        <label>System</label>
+                        <a href="#" class="nav-item" data-section="settings">
                             <i class="fas fa-cog"></i>
-                            Settings
+                            <span>Settings</span>
                         </a>
-                        <a href="#" class="nav-item" onclick="logout()">
+                        <a href="#" class="nav-item" id="logoutBtn">
                             <i class="fas fa-sign-out-alt"></i>
-                            Logout
+                            <span>Logout</span>
                         </a>
                     </div>
-                </nav>
-            </div>
+                </div>
+                
+                <div class="nav-footer">
+                    <div class="system-status">
+                        <div class="status-indicator online"></div>
+                        <span>System Online</span>
+                    </div>
+                </div>
+            </nav>
 
-            <!-- Main Content -->
-            <div class="main-content">
-                <!-- Header -->
+            <main class="system-content">
                 <header class="content-header">
-                    <h1 id="sectionTitle">Dashboard</h1>
+                    <div class="header-title">
+                        <h1 id="currentSection">Dashboard</h1>
+                        <p id="sectionDescription">Manage license keys and activations</p>
+                    </div>
+                    
                     <div class="header-actions">
-                        <div class="user-info">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="globalSearch" placeholder="Search across system...">
+                        </div>
+                        
+                        <div class="user-menu">
+                            <div class="user-avatar">
+                                <i class="fas fa-user-shield"></i>
+                            </div>
                             <span>Admin</span>
-                            <i class="fas fa-user-shield"></i>
                         </div>
                     </div>
                 </header>
 
-                <!-- Dashboard Section -->
-                <div id="dashboardSection" class="section">
-                    <!-- Generate Key Section -->
-                    <div class="card">
-                        <h2><i class="fas fa-bolt"></i> Key Generator</h2>
-                        <div class="generate-form">
-                            <select id="durationSelect">
-                                <option value="3600000">1 Hour</option>
-                                <option value="86400000">1 Day</option>
-                                <option value="604800000">1 Week</option>
-                                <option value="2592000000">1 Month</option>
-                                <option value="31536000000">1 Year</option>
-                            </select>
-                            <button id="generateBtn" class="btn-primary">
-                                <i class="fas fa-plus"></i>
-                                Generate Key
-                            </button>
+                <div class="content-sections">
+                    <section id="dashboardSection" class="content-section active">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-key"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>Total Keys</h3>
+                                    <span id="totalKeys">0</span>
+                                </div>
+                                <div class="stat-trend">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>+12%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-fingerprint"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>Active HWIDs</h3>
+                                    <span id="activeHwids">0</span>
+                                </div>
+                                <div class="stat-trend">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>+8%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-ban"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>Banned Keys</h3>
+                                    <span id="bannedKeys">0</span>
+                                </div>
+                                <div class="stat-trend">
+                                    <i class="fas fa-arrow-down"></i>
+                                    <span>-3%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-chart-pie"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>Activation Rate</h3>
+                                    <span id="activationRate">0%</span>
+                                </div>
+                                <div class="stat-trend">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>+5%</span>
+                                </div>
+                            </div>
                         </div>
-                        <div id="genMsg" class="generated-key hidden">
-                            <h4>Generated Key:</h4>
-                            <code id="generatedKeyText"></code>
-                            <button id="copyKeyBtn" class="btn-secondary">
-                                <i class="fas fa-copy"></i>
-                                Copy Key
-                            </button>
-                        </div>
-                    </div>
 
-                    <!-- Keys List -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h2><i class="fas fa-key"></i> All Keys</h2>
-                            <div class="header-actions">
-                                <button class="btn-secondary" onclick="loadKeys()">
-                                    <i class="fas fa-sync-alt"></i>
-                                    Refresh
-                                </button>
+                        <div class="dashboard-grid">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2>Recent Activations</h2>
+                                    <button class="btn-icon">
+                                        <i class="fas fa-sync"></i>
+                                    </button>
+                                </div>
+                                <div class="card-content">
+                                    <div class="activity-list" id="recentActivations">
+                                        <div class="activity-item">
+                                            <div class="activity-icon">
+                                                <i class="fas fa-fingerprint"></i>
+                                            </div>
+                                            <div class="activity-info">
+                                                <span class="activity-title">New HWID registered</span>
+                                                <span class="activity-time">2 minutes ago</span>
+                                            </div>
+                                            <div class="activity-badge success">
+                                                Active
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2>Key Distribution</h2>
+                                    <button class="btn-icon">
+                                        <i class="fas fa-chart-bar"></i>
+                                    </button>
+                                </div>
+                                <div class="card-content">
+                                    <div class="chart-container">
+                                        <canvas id="keyDistributionChart"></canvas>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="keys-list">
-                            <ul id="keysList"></ul>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Banned Keys Section -->
-                <div id="bannedSection" class="section hidden">
-                    <div class="card">
-                        <h2><i class="fas fa-ban"></i> Banned Keys</h2>
-                        <div class="keys-list">
-                            <ul id="bannedList"></ul>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>License Keys</h2>
+                                <div class="header-actions">
+                                    <div class="filter-group">
+                                        <select id="keyFilter">
+                                            <option value="all">All Keys</option>
+                                            <option value="active">Active</option>
+                                            <option value="banned">Banned</option>
+                                            <option value="expired">Expired</option>
+                                        </select>
+                                    </div>
+                                    <button class="btn-secondary" onclick="loadKeys()">
+                                        <i class="fas fa-sync"></i>
+                                        Refresh
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <div class="table-container">
+                                    <table id="keysTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Key</th>
+                                                <th>Created</th>
+                                                <th>Expires</th>
+                                                <th>HWIDs</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
+                    </section>
 
-                <!-- Settings Section -->
-                <div id="settingsSection" class="section hidden">
-                    <div class="card">
-                        <h2><i class="fas fa-cog"></i> Settings</h2>
-                        <div class="settings-form">
-                            <div class="setting-item">
-                                <label for="autoRefresh">Auto Refresh (seconds):</label>
-                                <input type="number" id="autoRefresh" min="0" value="30">
+                    <section id="generatorSection" class="content-section">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Generate New Key</h2>
                             </div>
-                            <div class="setting-item">
-                                <label for="theme">Theme:</label>
-                                <select id="theme">
-                                    <option value="dark-red">Dark Red</option>
-                                    <option value="dark-blue">Dark Blue</option>
-                                    <option value="dark-green">Dark Green</option>
-                                </select>
+                            <div class="card-content">
+                                <div class="generate-form">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Duration</label>
+                                            <input type="number" id="durationValue" value="1" min="1">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Time Unit</label>
+                                            <select id="durationUnit">
+                                                <option value="hours">Hours</option>
+                                                <option value="days" selected>Days</option>
+                                                <option value="weeks">Weeks</option>
+                                                <option value="months">Months</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Max HWIDs</label>
+                                            <input type="number" id="maxHwids" value="1" min="1" max="10">
+                                        </div>
+                                    </div>
+                                    
+                                    <button id="generateKeyBtn" class="btn-primary">
+                                        <i class="fas fa-bolt"></i>
+                                        Generate Key
+                                    </button>
+                                </div>
+                                
+                                <div id="generatedKeyContainer" class="generated-key hidden">
+                                    <h3>Generated Key</h3>
+                                    <div class="key-display">
+                                        <code id="generatedKey"></code>
+                                        <button id="copyKeyBtn" class="btn-icon">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                    <div class="key-info">
+                                        <span>HWID Limit: <strong id="keyHwidLimit">1</strong></span>
+                                        <span>Expires: <strong id="keyExpiry">Never</strong></span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="setting-item">
-                                <label for="apiUrl">API URL:</label>
-                                <input type="text" id="apiUrl" value="/api/keys">
-                            </div>
-                            <button class="btn-primary" onclick="saveSettings()">
-                                <i class="fas fa-save"></i>
-                                Save Settings
-                            </button>
                         </div>
-                    </div>
+                    </section>
+
+                    <section id="hwidSection" class="content-section">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>HWID Monitoring</h2>
+                                <div class="header-actions">
+                                    <input type="text" id="hwidSearch" placeholder="Search HWIDs...">
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <div class="table-container">
+                                    <table id="hwidTable">
+                                        <thead>
+                                            <tr>
+                                                <th>HWID Hash</th>
+                                                <th>Key</th>
+                                                <th>First Seen</th>
+                                                <th>Last Activity</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="activationsSection" class="content-section">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>Total Activations</h3>
+                                    <span id="totalActivations">0</span>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-percentage"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>Usage Rate</h3>
+                                    <span id="usageRate">0%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>Avg. per Key</h3>
+                                    <span id="avgActivations">0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Activation History</h2>
+                                <div class="header-actions">
+                                    <select id="timeFilter">
+                                        <option value="24h">Last 24h</option>
+                                        <option value="7d">Last 7 days</option>
+                                        <option value="30d">Last 30 days</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <div class="chart-container">
+                                    <canvas id="activationChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="settingsSection" class="content-section">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>System Settings</h2>
+                            </div>
+                            <div class="card-content">
+                                <div class="settings-form">
+                                    <div class="form-group">
+                                        <label>Admin Password</label>
+                                        <input type="password" id="adminPass" placeholder="Change admin password">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Auto Refresh (seconds)</label>
+                                        <input type="number" id="autoRefresh" value="30" min="5">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Default HWID Limit</label>
+                                        <input type="number" id="defaultHwidLimit" value="1" min="1" max="10">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Theme</label>
+                                        <select id="themeSelect">
+                                            <option value="dark">Dark Theme</option>
+                                            <option value="light">Light Theme</option>
+                                            <option value="auto">System Default</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <button class="btn-primary" onclick="saveSettings()">
+                                        <i class="fas fa-save"></i>
+                                        Save Settings
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                 </div>
-            </div>
+            </main>
         </div>
     </div>
 
-    <script>
-        let allKeys = [];
-        let currentSection = 'dashboard';
-
-        // Инициализация
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-        });
-
-        function initializeApp() {
-            bindEvents();
-            checkAuth();
-            loadSettings();
-        }
-
-        function bindEvents() {
-            // Login
-            document.getElementById('loginBtn').addEventListener('click', login);
-            document.getElementById('adminPass').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') login();
-            });
-
-            // Generate Key
-            document.getElementById('generateBtn').addEventListener('click', generateKey);
-            document.getElementById('copyKeyBtn').addEventListener('click', copyKey);
-        }
-
-        async function login() {
-            const password = document.getElementById('adminPass').value;
-            const message = document.getElementById('loginMsg');
-
-            if (!password) {
-                message.textContent = "Please enter password";
-                return;
-            }
-
-            try {
-                const res = await fetch("/api/login", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ password })
-                });
-                
-                const data = await res.json();
-                
-                if (data.success) {
-                    document.getElementById('loginBox').classList.add("hidden");
-                    document.getElementById('panelBox').classList.remove("hidden");
-                    localStorage.setItem('eclipse_auth', 'true');
-                    loadKeys();
-                } else {
-                    message.textContent = data.message || "Wrong password!";
-                }
-            } catch (error) {
-                message.textContent = "Login failed!";
-            }
-        }
-
-        function checkAuth() {
-            const isAuthenticated = localStorage.getItem('eclipse_auth');
-            if (isAuthenticated) {
-                document.getElementById('loginBox').classList.add("hidden");
-                document.getElementById('panelBox').classList.remove("hidden");
-                loadKeys();
-            }
-        }
-
-        async function loadKeys() {
-            try {
-                const res = await fetch("/api/keys");
-                allKeys = await res.json();
-                displayKeys(allKeys);
-                loadBannedKeys();
-            } catch (error) {
-                console.error("Failed to load keys:", error);
-            }
-        }
-
-        function displayKeys(keys) {
-            const keysList = document.getElementById('keysList');
-            keysList.innerHTML = '';
-
-            keys.forEach(key => {
-                const li = document.createElement('li');
-                li.className = 'key-item';
-                
-                li.innerHTML = `
-                    <div class="key-info">
-                        <code class="key-value">${key.value}</code>
-                        <div>
-                            <span class="key-expiry">${key.expiresAt ? new Date(key.expiresAt).toLocaleDateString() : "No Expiry"}</span>
-                            <span class="key-status ${key.banned ? 'banned' : 'active'}">
-                                ${key.banned ? "Banned" : "Active"}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="key-actions">
-                        ${!key.banned ? `
-                        <button class="btn-secondary btn-small" onclick="banKey('${key.value}')">
-                            <i class="fas fa-ban"></i>
-                            Ban
-                        </button>
-                        ` : ''}
-                        <button class="btn-secondary btn-small btn-danger" onclick="deleteKey('${key.value}')">
-                            <i class="fas fa-trash"></i>
-                            Delete
-                        </button>
-                    </div>
-                `;
-                
-                keysList.appendChild(li);
-            });
-        }
-
-        function loadBannedKeys() {
-            const bannedKeys = allKeys.filter(key => key.banned);
-            const bannedList = document.getElementById('bannedList');
-            
-            if (!bannedList) return;
-            
-            bannedList.innerHTML = '';
-
-            bannedKeys.forEach(key => {
-                const li = document.createElement('li');
-                li.className = 'key-item';
-                
-                li.innerHTML = `
-                    <div class="key-info">
-                        <code class="key-value">${key.value}</code>
-                        <div>
-                            <span class="key-expiry">${key.expiresAt ? new Date(key.expiresAt).toLocaleDateString() : "No Expiry"}</span>
-                            <span class="key-status banned">Banned</span>
-                        </div>
-                    </div>
-                    <div class="key-actions">
-                        <button class="btn-secondary btn-small" onclick="unbanKey('${key.value}')">
-                            <i class="fas fa-check"></i>
-                            Unban
-                        </button>
-                        <button class="btn-secondary btn-small btn-danger" onclick="deleteKey('${key.value}')">
-                            <i class="fas fa-trash"></i>
-                            Delete
-                        </button>
-                    </div>
-                `;
-                
-                bannedList.appendChild(li);
-            });
-        }
-
-        async function generateKey() {
-            const durationMs = parseInt(document.getElementById('durationSelect').value);
-            
-            try {
-                const res = await fetch("/api/keys", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ durationMs })
-                });
-                
-                const key = await res.json();
-                document.getElementById('generatedKeyText').textContent = key.value;
-                document.getElementById('genMsg').classList.remove("hidden");
-                loadKeys();
-            } catch (error) {
-                alert("Failed to generate key");
-            }
-        }
-
-        function copyKey() {
-            const key = document.getElementById('generatedKeyText').textContent;
-            navigator.clipboard.writeText(key).then(() => {
-                alert("Key copied to clipboard!");
-            });
-        }
-
-        async function banKey(keyValue) {
-            if (!confirm("Are you sure you want to ban this key?")) return;
-
-            try {
-                const res = await fetch("/api/ban", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ value: keyValue })
-                });
-                
-                const data = await res.json();
-                
-                if (data.success) {
-                    loadKeys();
-                } else {
-                    alert("Failed to ban key");
-                }
-            } catch (error) {
-                alert("Failed to ban key");
-            }
-        }
-
-        async function unbanKey(keyValue) {
-            if (!confirm("Are you sure you want to unban this key?")) return;
-
-            try {
-                // Нужно добавить endpoint для разбана на сервере
-                const res = await fetch("/api/unban", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ value: keyValue })
-                });
-                
-                if (res.ok) {
-                    loadKeys();
-                } else {
-                    alert("Failed to unban key");
-                }
-            } catch (error) {
-                alert("Failed to unban key");
-            }
-        }
-
-        async function deleteKey(keyValue) {
-            if (!confirm("Are you sure you want to delete this key? This action cannot be undone!")) return;
-
-            try {
-                const res = await fetch("/api/keys/delete", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ value: keyValue })
-                });
-                
-                if (res.ok) {
-                    loadKeys();
-                } else {
-                    alert("Failed to delete key");
-                }
-            } catch (error) {
-                alert("Failed to delete key");
-            }
-        }
-
-        function showSection(section) {
-            // Hide all sections
-            document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-            
-            // Show selected section
-            document.getElementById(section + 'Section').classList.remove('hidden');
-            
-            // Update active nav item
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            document.querySelector(`[onclick="showSection('${section}')"]`).classList.add('active');
-            
-            // Update title
-            document.getElementById('sectionTitle').textContent = 
-                section.charAt(0).toUpperCase() + section.slice(1);
-            
-            currentSection = section;
-            
-            // Load section-specific data
-            if (section === 'banned') {
-                loadBannedKeys();
-            }
-        }
-
-        function loadSettings() {
-            const autoRefresh = localStorage.getItem('autoRefresh') || '30';
-            const theme = localStorage.getItem('theme') || 'dark-red';
-            
-            document.getElementById('autoRefresh').value = autoRefresh;
-            document.getElementById('theme').value = theme;
-        }
-
-        function saveSettings() {
-            const autoRefresh = document.getElementById('autoRefresh').value;
-            const theme = document.getElementById('theme').value;
-            
-            localStorage.setItem('autoRefresh', autoRefresh);
-            localStorage.setItem('theme', theme);
-            
-            alert('Settings saved successfully!');
-            applyTheme(theme);
-        }
-
-        function applyTheme(theme) {
-            // Здесь можно добавить смену темы
-            console.log('Applying theme:', theme);
-        }
-
-        function logout() {
-            localStorage.removeItem('eclipse_auth');
-            window.location.reload();
-        }
-
-        // Enter key to login
-        document.getElementById('adminPass').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                login();
-            }
-        });
-
-        // Auto refresh
-        setInterval(() => {
-            if (currentSection === 'dashboard') {
-                loadKeys();
-            }
-        }, 30000); // 30 seconds
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="admin.js"></script>
 </body>
 </html>
