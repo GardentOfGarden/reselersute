@@ -9,25 +9,25 @@
 </head>
 <body>
     <div class="container">
+        <!-- Login Screen -->
         <div id="loginBox" class="login-container">
             <div class="login-box">
                 <div class="logo">
                     <i class="fas fa-fire"></i>
                     <h1>ECLIPSE</h1>
                 </div>
-                <p class="subtitle">Secure License Management System</p>
+                <p class="subtitle">Reseller Admin Panel</p>
                 <div class="input-group">
                     <input type="password" id="adminPass" placeholder="Enter admin password">
-                    <button id="loginBtn" class="btn btn-primary">
-                        <i class="fas fa-lock"></i>
-                        Login
-                    </button>
+                    <button id="loginBtn">Login</button>
                 </div>
-                <p id="loginMsg" class="text-muted"></p>
+                <p id="loginMsg"></p>
             </div>
         </div>
 
+        <!-- Main Panel -->
         <div id="panelBox" class="main-panel hidden">
+            <!-- Sidebar -->
             <div class="sidebar">
                 <div class="sidebar-header">
                     <i class="fas fa-fire"></i>
@@ -40,6 +40,10 @@
                             <i class="fas fa-key"></i>
                             License Keys
                         </a>
+                        <a href="#" class="nav-item" onclick="showSection('stats')">
+                            <i class="fas fa-chart-pie"></i>
+                            Statistics
+                        </a>
                     </div>
                     <div class="nav-section">
                         <h3>Management</h3>
@@ -47,9 +51,9 @@
                             <i class="fas fa-ban"></i>
                             Banned Keys
                         </a>
-                        <a href="#" class="nav-item" onclick="showSection('hwid')">
-                            <i class="fas fa-microchip"></i>
-                            HWID Control
+                        <a href="#" class="nav-item" onclick="showSection('screenshots')">
+                            <i class="fas fa-camera"></i>
+                            Screenshots
                         </a>
                     </div>
                     <div class="nav-section">
@@ -66,193 +70,203 @@
                 </nav>
             </div>
 
+            <!-- Main Content -->
             <div class="main-content">
+                <!-- Header -->
                 <header class="content-header">
                     <h1 id="sectionTitle">Dashboard</h1>
                     <div class="header-actions">
                         <div class="user-info">
-                            <span>Administrator</span>
+                            <span>Admin</span>
                             <i class="fas fa-user-shield"></i>
                         </div>
                     </div>
                 </header>
 
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-key"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Total Keys</h3>
-                            <span id="totalKeys">0</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Active Keys</h3>
-                            <span id="activeKeys">0</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-ban"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Banned Keys</h3>
-                            <span id="bannedKeys">0</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Used Keys</h3>
-                            <span id="usedKeys">0</span>
-                        </div>
-                    </div>
-                </div>
-
+                <!-- Dashboard Section -->
                 <div id="dashboardSection" class="section">
+                    <!-- Stats Overview -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-key"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Total Keys</h3>
+                                <span id="totalKeys">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Active Keys</h3>
+                                <span id="activeKeys">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-ban"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Banned Keys</h3>
+                                <span id="bannedKeys">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Expired Keys</h3>
+                                <span id="expiredKeys">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Generate Key Section -->
                     <div class="card">
-                        <h2><i class="fas fa-bolt"></i> Generate New Key</h2>
+                        <h2><i class="fas fa-bolt"></i> Key Generator</h2>
                         <div class="generate-form">
-                            <select id="durationSelect">
-                                <option value="3600000">1 Hour</option>
-                                <option value="86400000">1 Day</option>
-                                <option value="604800000">1 Week</option>
-                                <option value="2592000000">1 Month</option>
-                                <option value="31536000000">1 Year</option>
-                                <option value="0">Lifetime</option>
-                            </select>
-                            <select id="hwidLimitSelect">
-                                <option value="1">1 Device</option>
-                                <option value="2">2 Devices</option>
-                                <option value="3">3 Devices</option>
-                                <option value="5">5 Devices</option>
-                            </select>
-                            <button id="generateBtn" class="btn btn-primary">
+                            <div class="input-group">
+                                <label for="durationSelect">Duration:</label>
+                                <select id="durationSelect">
+                                    <option value="3600000">1 Hour</option>
+                                    <option value="86400000">1 Day</option>
+                                    <option value="604800000">1 Week</option>
+                                    <option value="2592000000">1 Month</option>
+                                    <option value="31536000000">1 Year</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="maxActivations">Max Activations:</label>
+                                <input type="number" id="maxActivations" min="1" value="1">
+                            </div>
+                            <button id="generateBtn" class="btn-primary">
                                 <i class="fas fa-plus"></i>
                                 Generate Key
                             </button>
                         </div>
                         <div id="genMsg" class="generated-key hidden">
-                            <h4>Generated License Key:</h4>
+                            <h4>Generated Key:</h4>
                             <code id="generatedKeyText"></code>
-                            <button id="copyKeyBtn" class="btn btn-secondary">
+                            <button id="copyKeyBtn" class="btn-secondary">
                                 <i class="fas fa-copy"></i>
                                 Copy Key
                             </button>
                         </div>
                     </div>
 
+                    <!-- Keys List -->
                     <div class="card">
                         <div class="card-header">
-                            <h2><i class="fas fa-key"></i> Active License Keys</h2>
+                            <h2><i class="fas fa-key"></i> All Keys</h2>
                             <div class="header-actions">
-                                <input type="text" id="searchInput" placeholder="Search keys..." class="input-group">
-                                <button class="btn btn-secondary" onclick="loadKeys()">
+                                <input type="text" id="searchInput" placeholder="Search keys...">
+                                <button class="btn-secondary" onclick="loadKeys()">
                                     <i class="fas fa-sync-alt"></i>
                                     Refresh
                                 </button>
                             </div>
                         </div>
-                        <div class="keys-list">
-                            <ul id="keysList"></ul>
+                        <div class="table-container">
+                            <table id="keysTable">
+                                <thead>
+                                    <tr>
+                                        <th>Key</th>
+                                        <th>Created</th>
+                                        <th>Expires</th>
+                                        <th>HWID</th>
+                                        <th>Activations</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Keys will be populated here -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
 
+                <!-- Statistics Section -->
+                <div id="statsSection" class="section hidden">
+                    <div class="card">
+                        <h2><i class="fas fa-chart-pie"></i> Statistics</h2>
+                        <div class="stats-charts">
+                            <div class="chart-container">
+                                <canvas id="keysChart"></canvas>
+                            </div>
+                            <div class="stats-details">
+                                <div class="stat-detail">
+                                    <span class="stat-label">Total Keys Generated:</span>
+                                    <span class="stat-value" id="statTotalKeys">0</span>
+                                </div>
+                                <div class="stat-detail">
+                                    <span class="stat-label">Active Sessions:</span>
+                                    <span class="stat-value" id="statActiveSessions">0</span>
+                                </div>
+                                <div class="stat-detail">
+                                    <span class="stat-label">Screenshots Captured:</span>
+                                    <span class="stat-value" id="statScreenshots">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Banned Keys Section -->
                 <div id="bannedSection" class="section hidden">
                     <div class="card">
                         <h2><i class="fas fa-ban"></i> Banned Keys</h2>
-                        <div class="keys-list">
-                            <ul id="bannedList"></ul>
+                        <div class="table-container">
+                            <table id="bannedTable">
+                                <thead>
+                                    <tr>
+                                        <th>Key</th>
+                                        <th>Created</th>
+                                        <th>HWID</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Banned keys will be populated here -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
 
-                <div id="hwidSection" class="section hidden">
+                <!-- Screenshots Section -->
+                <div id="screenshotsSection" class="section hidden">
                     <div class="card">
-                        <h2><i class="fas fa-microchip"></i> HWID Management</h2>
-                        
-                        <div class="hwid-search">
-                            <input type="text" id="keySearch" placeholder="Enter license key to manage" class="input-group">
-                            <button class="btn btn-primary" onclick="searchKeyHWID()">
-                                <i class="fas fa-search"></i>
-                                Search
+                        <h2><i class="fas fa-camera"></i> Screenshots</h2>
+                        <div class="screenshots-controls">
+                            <input type="text" id="screenshotSearch" placeholder="Search by key...">
+                            <button class="btn-secondary" onclick="loadScreenshots()">
+                                <i class="fas fa-sync-alt"></i>
+                                Refresh
                             </button>
                         </div>
-
-                        <div id="hwidKeyInfo" class="hwid-management hidden">
-                            <div class="hwid-info">
-                                <h3>Managing Key: <code id="currentKeyValue"></code></h3>
-                            </div>
-
-                            <div class="hwid-controls">
-                                <div class="control-group">
-                                    <label>HWID Lock Status</label>
-                                    <span id="hwidLockStatus" class="status-disabled">Disabled</span>
-                                    <button id="toggleHwidLock" class="btn btn-small" onclick="toggleHWIDLock()">
-                                        Enable Lock
-                                    </button>
-                                </div>
-
-                                <div class="control-group">
-                                    <label>Device Limit</label>
-                                    <span id="currentHwidLimit">1</span>
-                                    <div style="display: flex; gap: 8px; margin-top: 8px;">
-                                        <input type="number" id="newHwidLimit" min="1" max="5" value="1" style="width: 60px;">
-                                        <button class="btn btn-small" onclick="setHwidLimit()">
-                                            Set
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="control-group">
-                                    <label>Usage Statistics</label>
-                                    <span id="usageCount">0 uses</span>
-                                    <span id="lastUsed">Never used</span>
-                                </div>
-                            </div>
-
-                            <div class="hwid-list">
-                                <h4>Registered Devices</h4>
-                                <ul id="hwidList"></ul>
-                            </div>
-
-                            <div class="hwid-actions">
-                                <input type="text" id="newHwid" placeholder="Enter HWID to add">
-                                <button class="btn btn-success" onclick="addHWID()">
-                                    <i class="fas fa-plus"></i>
-                                    Add
-                                </button>
-                                <button class="btn btn-danger" onclick="clearHWIDs()">
-                                    <i class="fas fa-trash"></i>
-                                    Clear All
-                                </button>
-                            </div>
-
-                            <div class="screenshots-grid" id="screenshotsContainer">
-                                <h4 style="grid-column: 1 / -1; margin-top: 20px;">Screenshots</h4>
-                            </div>
+                        <div class="screenshots-grid" id="screenshotsGrid">
+                            <!-- Screenshots will be populated here -->
                         </div>
                     </div>
                 </div>
 
+                <!-- Settings Section -->
                 <div id="settingsSection" class="section hidden">
                     <div class="card">
-                        <h2><i class="fas fa-cog"></i> System Settings</h2>
+                        <h2><i class="fas fa-cog"></i> Settings</h2>
                         <div class="settings-form">
                             <div class="setting-item">
-                                <label for="autoRefresh">Auto Refresh Interval</label>
-                                <input type="number" id="autoRefresh" min="5" max="300" value="30">
+                                <label for="autoRefresh">Auto Refresh (seconds):</label>
+                                <input type="number" id="autoRefresh" min="0" value="30">
                             </div>
                             <div class="setting-item">
-                                <label for="theme">Interface Theme</label>
+                                <label for="theme">Theme:</label>
                                 <select id="theme">
                                     <option value="dark-red">Dark Red</option>
                                     <option value="dark-blue">Dark Blue</option>
@@ -261,10 +275,10 @@
                                 </select>
                             </div>
                             <div class="setting-item">
-                                <label for="apiUrl">API Endpoint</label>
+                                <label for="apiUrl">API URL:</label>
                                 <input type="text" id="apiUrl" value="/api/keys">
                             </div>
-                            <button class="btn btn-primary" onclick="saveSettings()">
+                            <button class="btn-primary" onclick="saveSettings()">
                                 <i class="fas fa-save"></i>
                                 Save Settings
                             </button>
@@ -275,683 +289,24 @@
         </div>
     </div>
 
-    <script>
-        let allKeys = [];
-        let currentSection = 'dashboard';
-        let currentManagedKey = null;
-        let autoRefreshInterval;
-
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-        });
-
-        function initializeApp() {
-            bindEvents();
-            checkAuth();
-            loadSettings();
-        }
-
-        function bindEvents() {
-            document.getElementById('loginBtn').addEventListener('click', login);
-            document.getElementById('adminPass').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') login();
-            });
-            document.getElementById('generateBtn').addEventListener('click', generateKey);
-            document.getElementById('copyKeyBtn').addEventListener('click', copyKey);
-            document.getElementById('searchInput').addEventListener('input', filterKeys);
-        }
-
-        async function login() {
-            const password = document.getElementById('adminPass').value;
-            const message = document.getElementById('loginMsg');
-
-            if (!password) {
-                message.textContent = "Please enter password";
-                message.className = "text-danger";
-                return;
-            }
-
-            try {
-                const res = await fetch("/api/login", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ password })
-                });
-                
-                const data = await res.json();
-                
-                if (data.success) {
-                    document.getElementById('loginBox').classList.add("hidden");
-                    document.getElementById('panelBox').classList.remove("hidden");
-                    localStorage.setItem('eclipse_auth', 'true');
-                    loadKeys();
-                    startAutoRefresh();
-                } else {
-                    message.textContent = data.message || "Wrong password!";
-                    message.className = "text-danger";
-                }
-            } catch (error) {
-                message.textContent = "Login failed!";
-                message.className = "text-danger";
-            }
-        }
-
-        function checkAuth() {
-            const isAuthenticated = localStorage.getItem('eclipse_auth');
-            if (isAuthenticated) {
-                document.getElementById('loginBox').classList.add("hidden");
-                document.getElementById('panelBox').classList.remove("hidden");
-                loadKeys();
-                startAutoRefresh();
-            }
-        }
-
-        function startAutoRefresh() {
-            const interval = parseInt(localStorage.getItem('autoRefresh') || '30') * 1000;
-            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
-            autoRefreshInterval = setInterval(() => {
-                if (currentSection === 'dashboard') {
-                    loadKeys();
-                }
-            }, interval);
-        }
-
-        async function loadKeys() {
-            try {
-                const res = await fetch("/api/keys");
-                allKeys = await res.json();
-                displayKeys(allKeys);
-                updateStats();
-                loadBannedKeys();
-            } catch (error) {
-                console.error("Failed to load keys:", error);
-            }
-        }
-
-        function updateStats() {
-            const totalKeys = allKeys.length;
-            const activeKeys = allKeys.filter(k => !k.banned && (!k.expiresAt || new Date(k.expiresAt) > new Date())).length;
-            const bannedKeys = allKeys.filter(k => k.banned).length;
-            const usedKeys = allKeys.filter(k => k.usedCount > 0).length;
-
-            document.getElementById('totalKeys').textContent = totalKeys;
-            document.getElementById('activeKeys').textContent = activeKeys;
-            document.getElementById('bannedKeys').textContent = bannedKeys;
-            document.getElementById('usedKeys').textContent = usedKeys;
-        }
-
-        function displayKeys(keys) {
-            const keysList = document.getElementById('keysList');
-            keysList.innerHTML = '';
-
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const filteredKeys = keys.filter(key => 
-                !key.banned && 
-                key.value.toLowerCase().includes(searchTerm)
-            );
-
-            filteredKeys.forEach(key => {
-                const li = document.createElement('li');
-                li.className = 'key-item fade-in';
-                
-                const expiresText = key.expiresAt ? 
-                    `Expires: ${new Date(key.expiresAt).toLocaleDateString()}` : 
-                    'Lifetime';
-                
-                const usedText = key.usedCount > 0 ? 
-                    `Used ${key.usedCount} times` : 
-                    'Never used';
-
-                li.innerHTML = `
-                    <div class="key-info">
-                        <code class="key-value">${key.value}</code>
-                        <div class="key-details">
-                            <span class="key-expiry">${expiresText}</span>
-                            <span class="key-status ${key.banned ? 'banned' : 'active'}">
-                                ${key.banned ? "Banned" : "Active"}
-                            </span>
-                            ${key.hwidLocked ? '<span class="key-status hwid-locked">HWID Locked</span>' : ''}
-                            <span class="key-expiry">${usedText}</span>
-                        </div>
-                    </div>
-                    <div class="key-actions">
-                        ${!key.banned ? `
-                        <button class="btn btn-secondary btn-small" onclick="banKey('${key.value}')">
-                            <i class="fas fa-ban"></i>
-                            Ban
-                        </button>
-                        ` : ''}
-                        <button class="btn btn-secondary btn-small" onclick="manageKeyHWID('${key.value}')">
-                            <i class="fas fa-microchip"></i>
-                            HWID
-                        </button>
-                        <button class="btn btn-danger btn-small" onclick="deleteKey('${key.value}')">
-                            <i class="fas fa-trash"></i>
-                            Delete
-                        </button>
-                    </div>
-                `;
-                
-                keysList.appendChild(li);
-            });
-        }
-
-        function filterKeys() {
-            displayKeys(allKeys);
-        }
-
-        function loadBannedKeys() {
-            const bannedKeys = allKeys.filter(key => key.banned);
-            const bannedList = document.getElementById('bannedList');
-            
-            if (!bannedList) return;
-            
-            bannedList.innerHTML = '';
-
-            bannedKeys.forEach(key => {
-                const li = document.createElement('li');
-                li.className = 'key-item fade-in';
-                
-                li.innerHTML = `
-                    <div class="key-info">
-                        <code class="key-value">${key.value}</code>
-                        <div>
-                            <span class="key-expiry">${key.expiresAt ? new Date(key.expiresAt).toLocaleDateString() : "No Expiry"}</span>
-                            <span class="key-status banned">Banned</span>
-                        </div>
-                    </div>
-                    <div class="key-actions">
-                        <button class="btn btn-secondary btn-small" onclick="unbanKey('${key.value}')">
-                            <i class="fas fa-check"></i>
-                            Unban
-                        </button>
-                        <button class="btn btn-danger btn-small" onclick="deleteKey('${key.value}')">
-                            <i class="fas fa-trash"></i>
-                            Delete
-                        </button>
-                    </div>
-                `;
-                
-                bannedList.appendChild(li);
-            });
-        }
-
-        async function generateKey() {
-            const durationMs = parseInt(document.getElementById('durationSelect').value);
-            const maxHwid = parseInt(document.getElementById('hwidLimitSelect').value);
-            
-            try {
-                const res = await fetch("/api/keys", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ durationMs, maxHwid })
-                });
-                
-                const key = await res.json();
-                document.getElementById('generatedKeyText').textContent = key.value;
-                document.getElementById('genMsg').classList.remove("hidden");
-                loadKeys();
-                
-                showNotification('Key generated successfully!', 'success');
-            } catch (error) {
-                showNotification('Failed to generate key', 'error');
-            }
-        }
-
-        function copyKey() {
-            const key = document.getElementById('generatedKeyText').textContent;
-            navigator.clipboard.writeText(key).then(() => {
-                showNotification('Key copied to clipboard!', 'success');
-            });
-        }
-
-        async function banKey(keyValue) {
-            if (!confirm("Are you sure you want to ban this key?")) return;
-
-            try {
-                const res = await fetch("/api/ban", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ value: keyValue })
-                });
-                
-                const data = await res.json();
-                
-                if (data.success) {
-                    loadKeys();
-                    showNotification('Key banned successfully', 'success');
-                } else {
-                    showNotification('Failed to ban key', 'error');
-                }
-            } catch (error) {
-                showNotification('Failed to ban key', 'error');
-            }
-        }
-
-        async function unbanKey(keyValue) {
-            if (!confirm("Are you sure you want to unban this key?")) return;
-
-            try {
-                const res = await fetch("/api/unban", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ value: keyValue })
-                });
-                
-                if (res.ok) {
-                    loadKeys();
-                    showNotification('Key unbanned successfully', 'success');
-                } else {
-                    showNotification('Failed to unban key', 'error');
-                }
-            } catch (error) {
-                showNotification('Failed to unban key', 'error');
-            }
-        }
-
-        async function deleteKey(keyValue) {
-            if (!confirm("Are you sure you want to delete this key? This action cannot be undone!")) return;
-
-            try {
-                const res = await fetch("/api/keys/delete", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ value: keyValue })
-                });
-                
-                if (res.ok) {
-                    loadKeys();
-                    showNotification('Key deleted successfully', 'success');
-                } else {
-                    showNotification('Failed to delete key', 'error');
-                }
-            } catch (error) {
-                showNotification('Failed to delete key', 'error');
-            }
-        }
-
-        async function searchKeyHWID() {
-            const keyValue = document.getElementById('keySearch').value;
-            if (!keyValue) {
-                showNotification("Please enter a key to search", 'warning');
-                return;
-            }
-
-            try {
-                const res = await fetch(`/api/keys/${keyValue}`);
-                if (res.ok) {
-                    currentManagedKey = await res.json();
-                    displayHWIDManagement();
-                    loadScreenshots();
-                } else {
-                    showNotification("Key not found", 'error');
-                }
-            } catch (error) {
-                showNotification("Error searching for key", 'error');
-            }
-        }
-
-        function displayHWIDManagement() {
-            if (!currentManagedKey) return;
-
-            document.getElementById('currentKeyValue').textContent = currentManagedKey.value;
-            
-            const statusElement = document.getElementById('hwidLockStatus');
-            statusElement.textContent = currentManagedKey.hwidLocked ? "Enabled" : "Disabled";
-            statusElement.className = currentManagedKey.hwidLocked ? "status-enabled" : "status-disabled";
-            
-            document.getElementById('toggleHwidLock').textContent = currentManagedKey.hwidLocked ? "Disable Lock" : "Enable Lock";
-            document.getElementById('currentHwidLimit').textContent = currentManagedKey.maxHwid;
-            document.getElementById('newHwidLimit').value = currentManagedKey.maxHwid;
-            
-            document.getElementById('usageCount').textContent = `${currentManagedKey.usedCount || 0} uses`;
-            document.getElementById('lastUsed').textContent = currentManagedKey.lastUsed ? 
-                new Date(currentManagedKey.lastUsed).toLocaleString() : 'Never used';
-
-            const hwidList = document.getElementById('hwidList');
-            hwidList.innerHTML = '';
-
-            if (currentManagedKey.hwids && currentManagedKey.hwids.length > 0) {
-                currentManagedKey.hwids.forEach(hwid => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `
-                        <code>${hwid}</code>
-                        <button class="btn btn-danger btn-small" onclick="removeHWID('${hwid}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    `;
-                    hwidList.appendChild(li);
-                });
-            } else {
-                hwidList.innerHTML = '<li style="color: var(--text-muted);">No devices registered</li>';
-            }
-
-            document.getElementById('hwidKeyInfo').classList.remove('hidden');
-        }
-
-        async function loadScreenshots() {
-            if (!currentManagedKey) return;
-
-            try {
-                const res = await fetch(`/api/screenshots/${currentManagedKey.value}`);
-                const screenshots = await res.json();
-                const container = document.getElementById('screenshotsContainer');
-                
-                container.innerHTML = '<h4 style="grid-column: 1 / -1; margin-top: 20px;">Screenshots</h4>';
-                
-                if (screenshots.length === 0) {
-                    container.innerHTML += '<p style="grid-column: 1 / -1; color: var(--text-muted);">No screenshots available</p>';
-                    return;
-                }
-
-                screenshots.forEach(screenshot => {
-                    const item = document.createElement('div');
-                    item.className = 'screenshot-item';
-                    item.innerHTML = `
-                        <img src="/screenshots/${screenshot.filename}" alt="Screenshot">
-                        <div class="screenshot-info">
-                            <div>${new Date(screenshot.timestamp).toLocaleDateString()}</div>
-                            <code>${screenshot.hwid.substring(0, 8)}...</code>
-                        </div>
-                        <button class="btn btn-secondary btn-small" onclick="downloadScreenshot('${screenshot.filename}')" style="margin-top: 8px;">
-                            <i class="fas fa-download"></i>
-                            Download
-                        </button>
-                    `;
-                    container.appendChild(item);
-                });
-            } catch (error) {
-                console.error('Error loading screenshots:', error);
-            }
-        }
-
-        function downloadScreenshot(filename) {
-            window.open(`/screenshots/${filename}`, '_blank');
-        }
-
-        async function toggleHWIDLock() {
-            if (!currentManagedKey) return;
-
-            try {
-                const res = await fetch("/api/hwid/manage", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ 
-                        value: currentManagedKey.value, 
-                        action: "toggle-lock" 
-                    })
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    currentManagedKey = data.key;
-                    displayHWIDManagement();
-                    showNotification('HWID lock updated', 'success');
-                } else {
-                    showNotification('Failed to toggle HWID lock', 'error');
-                }
-            } catch (error) {
-                showNotification('Error toggling HWID lock', 'error');
-            }
-        }
-
-        async function setHwidLimit() {
-            if (!currentManagedKey) return;
-
-            const newLimit = parseInt(document.getElementById('newHwidLimit').value);
-            if (isNaN(newLimit) || newLimit < 1 || newLimit > 5) {
-                showNotification("Please enter a valid limit (1-5)", 'warning');
-                return;
-            }
-
-            try {
-                const res = await fetch("/api/hwid/manage", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ 
-                        value: currentManagedKey.value, 
-                        action: "set-limit",
-                        hwid: newLimit
-                    })
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    currentManagedKey = data.key;
-                    displayHWIDManagement();
-                    showNotification('Device limit updated', 'success');
-                } else {
-                    showNotification('Failed to set device limit', 'error');
-                }
-            } catch (error) {
-                showNotification('Error setting device limit', 'error');
-            }
-        }
-
-        async function addHWID() {
-            if (!currentManagedKey) return;
-
-            const newHwid = document.getElementById('newHwid').value;
-            if (!newHwid) {
-                showNotification("Please enter a HWID", 'warning');
-                return;
-            }
-
-            try {
-                const res = await fetch("/api/hwid/manage", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ 
-                        value: currentManagedKey.value, 
-                        action: "add",
-                        hwid: newHwid
-                    })
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    currentManagedKey = data.key;
-                    document.getElementById('newHwid').value = '';
-                    displayHWIDManagement();
-                    showNotification('HWID added successfully', 'success');
-                } else {
-                    showNotification('Failed to add HWID', 'error');
-                }
-            } catch (error) {
-                showNotification('Error adding HWID', 'error');
-            }
-        }
-
-        async function removeHWID(hwid) {
-            if (!currentManagedKey) return;
-
-            if (!confirm("Are you sure you want to remove this device?")) return;
-
-            try {
-                const res = await fetch("/api/hwid/manage", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ 
-                        value: currentManagedKey.value, 
-                        action: "remove",
-                        hwid: hwid
-                    })
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    currentManagedKey = data.key;
-                    displayHWIDManagement();
-                    showNotification('Device removed', 'success');
-                } else {
-                    showNotification('Failed to remove device', 'error');
-                }
-            } catch (error) {
-                showNotification('Error removing device', 'error');
-            }
-        }
-
-        async function clearHWIDs() {
-            if (!currentManagedKey) return;
-
-            if (!confirm("Are you sure you want to clear all registered devices?")) return;
-
-            try {
-                const res = await fetch("/api/hwid/manage", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ 
-                        value: currentManagedKey.value, 
-                        action: "clear"
-                    })
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    currentManagedKey = data.key;
-                    displayHWIDManagement();
-                    showNotification('All devices cleared', 'success');
-                } else {
-                    showNotification('Failed to clear devices', 'error');
-                }
-            } catch (error) {
-                showNotification('Error clearing devices', 'error');
-            }
-        }
-
-        function manageKeyHWID(keyValue) {
-            document.getElementById('keySearch').value = keyValue;
-            searchKeyHWID();
-            showSection('hwid');
-        }
-
-        function showSection(section) {
-            document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-            document.getElementById(section + 'Section').classList.remove('hidden');
-            
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            document.querySelector(`[onclick="showSection('${section}')"]`).classList.add('active');
-            
-            document.getElementById('sectionTitle').textContent = 
-                section.charAt(0).toUpperCase() + section.slice(1);
-            
-            currentSection = section;
-            
-            if (section === 'banned') {
-                loadBannedKeys();
-            }
-        }
-
-        function loadSettings() {
-            const autoRefresh = localStorage.getItem('autoRefresh') || '30';
-            const theme = localStorage.getItem('theme') || 'dark-red';
-            
-            document.getElementById('autoRefresh').value = autoRefresh;
-            document.getElementById('theme').value = theme;
-            applyTheme(theme);
-        }
-
-        function saveSettings() {
-            const autoRefresh = document.getElementById('autoRefresh').value;
-            const theme = document.getElementById('theme').value;
-            
-            localStorage.setItem('autoRefresh', autoRefresh);
-            localStorage.setItem('theme', theme);
-            
-            startAutoRefresh();
-            applyTheme(theme);
-            showNotification('Settings saved successfully!', 'success');
-        }
-
-        function applyTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-        }
-
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
-            notification.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'info'}-circle"></i>
-                ${message}
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.classList.add('show');
-            }, 100);
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 300);
-            }, 3000);
-        }
-
-        function logout() {
-            localStorage.removeItem('eclipse_auth');
-            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
-            window.location.reload();
-        }
-
-        document.getElementById('adminPass').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                login();
-            }
-        });
-
-        setInterval(() => {
-            if (currentSection === 'dashboard') {
-                loadKeys();
-            }
-        }, 30000);
-    </script>
-
-    <style>
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 16px 24px;
-            border-radius: 12px;
-            color: white;
-            font-weight: 600;
-            z-index: 10000;
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .notification.show {
-            transform: translateX(0);
-        }
-
-        .notification-success {
-            background: var(--success);
-            border-left: 4px solid #00a055;
-        }
-
-        .notification-error {
-            background: var(--danger);
-            border-left: 4px solid #cc0000;
-        }
-
-        .notification-warning {
-            background: var(--warning);
-            color: #333;
-            border-left: 4px solid #e6b800;
-        }
-
-        .text-danger {
-            color: var(--danger);
-        }
-
-        .text-success {
-            color: var(--success);
-        }
-    </style>
+    <!-- Screenshot Modal -->
+    <div id="screenshotModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Screenshot Preview</h3>
+                <span class="close" onclick="closeModal('screenshotModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <img id="screenshotImage" src="" alt="Screenshot">
+                <div class="screenshot-info">
+                    <p>Key: <span id="screenshotKey"></span></p>
+                    <p>Timestamp: <span id="screenshotTimestamp"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="admin.js"></script>
 </body>
 </html>
