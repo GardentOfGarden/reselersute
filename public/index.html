@@ -1,183 +1,314 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="quantum">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECLIPSE | Admin Panel</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>Quantum Auth Panel - Multi-Application System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <!-- Login Screen -->
-        <div id="loginScreen" class="login-container">
-            <div class="login-box">
-                <div class="logo">
-                    <i class="fas fa-fire"></i>
-                    <h1>ECLIPSE</h1>
-                </div>
-                <p class="subtitle">Reseller Admin Panel</p>
-                <div class="input-group">
-                    <input type="password" id="passwordInput" placeholder="Enter admin password">
-                    <button id="loginBtn">Login</button>
-                </div>
-                <p id="loginMessage"></p>
-            </div>
+    <!-- Preloader -->
+    <div id="preloader" class="preloader">
+        <div class="quantum-loader">
+            <div class="quantum-particle"></div>
+            <div class="quantum-particle"></div>
+            <div class="quantum-particle"></div>
         </div>
+        <p>Initializing Quantum System...</p>
+    </div>
 
-        <!-- Main Panel -->
-        <div id="mainPanel" class="main-panel hidden">
-            <!-- Sidebar -->
-            <div class="sidebar">
-                <div class="sidebar-header">
-                    <i class="fas fa-fire"></i>
-                    <h2>ECLIPSE</h2>
-                </div>
-                <nav class="sidebar-nav">
-                    <div class="nav-section">
-                        <h3>Dashboard</h3>
-                        <a href="#" class="nav-item active" data-section="dashboard">
-                            <i class="fas fa-chart-line"></i>
-                            License Keys
-                        </a>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="quantum-background">
+            <div class="quantum-orbit"></div>
+            <div class="quantum-orbit"></div>
+            <div class="quantum-orbit"></div>
+        </div>
+        
+        <div class="login-container">
+            <div class="quantum-card">
+                <div class="brand-header">
+                    <div class="quantum-logo">
+                        <i class="fas fa-atom"></i>
                     </div>
-                    <div class="nav-section">
-                        <h3>Management</h3>
-                        <a href="#" class="nav-item" data-section="banned">
-                            <i class="fas fa-ban"></i>
-                            Banned Keys
-                        </a>
-                    </div>
-                    <div class="nav-section">
-                        <h3>Settings</h3>
-                        <a href="#" class="nav-item" data-section="settings">
-                            <i class="fas fa-cog"></i>
-                            Settings
-                        </a>
-                        <a href="#" class="nav-item" onclick="logout()">
-                            <i class="fas fa-sign-out-alt"></i>
-                            Logout
-                        </a>
-                    </div>
-                </nav>
-            </div>
-
-            <!-- Main Content -->
-            <div class="main-content">
-                <!-- Header -->
-                <header class="content-header">
-                    <h1>Dashboard</h1>
-                    <div class="header-actions">
-                        <div class="user-info">
-                            <span>Admin</span>
-                            <i class="fas fa-user-shield"></i>
-                        </div>
-                    </div>
-                </header>
-
-                <!-- Stats Overview -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-key"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Total Keys</h3>
-                            <span id="totalKeys">0</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Active Keys</h3>
-                            <span id="activeKeys">0</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-ban"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Banned Keys</h3>
-                            <span id="bannedKeys">0</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Expired Keys</h3>
-                            <span id="expiredKeys">0</span>
-                        </div>
-                    </div>
+                    <h1>Quantum Auth</h1>
+                    <p class="tagline">Multi-Dimensional Application Security</p>
                 </div>
 
-                <!-- Generate Key Section -->
-                <div class="card">
-                    <h2>Generate New Key</h2>
-                    <div class="generate-form">
-                        <input type="number" id="durationValue" placeholder="Duration" min="1" value="1">
-                        <select id="durationUnit">
-                            <option value="seconds">Seconds</option>
-                            <option value="minutes">Minutes</option>
-                            <option value="hours">Hours</option>
-                            <option value="days" selected>Days</option>
-                            <option value="weeks">Weeks</option>
-                            <option value="months">Months</option>
-                            <option value="years">Years</option>
-                        </select>
-                        <button id="generateKeyBtn" class="btn-primary">
-                            <i class="fas fa-bolt"></i>
-                            Generate Key
+                <form id="loginForm" class="login-form">
+                    <div class="input-group quantum-input">
+                        <i class="fas fa-user-shield"></i>
+                        <input type="text" id="username" placeholder="Quantum ID" required>
+                    </div>
+                    
+                    <div class="input-group quantum-input">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" placeholder="Encryption Key" required>
+                        <button type="button" class="password-toggle" id="passwordToggle">
+                            <i class="fas fa-eye"></i>
                         </button>
                     </div>
-                    <div id="generatedKeyContainer" class="generated-key hidden">
-                        <h4>Generated Key:</h4>
-                        <code id="generatedKey"></code>
-                        <button id="copyKeyBtn" class="btn-secondary">
-                            <i class="fas fa-copy"></i>
-                            Copy
-                        </button>
+
+                    <button type="submit" class="quantum-btn primary">
+                        <span class="btn-content">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Quantum Access
+                        </span>
+                        <div class="quantum-wave"></div>
+                    </button>
+                </form>
+
+                <div class="login-features">
+                    <div class="feature">
+                        <i class="fas fa-layer-group"></i>
+                        <span>Multi-App Support</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Military Grade Security</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-chart-network"></i>
+                        <span>Real-time Analytics</span>
                     </div>
                 </div>
 
-                <!-- Keys Table -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2>License Keys</h2>
-                        <div class="table-actions">
-                            <input type="text" id="searchInput" placeholder="Search keys...">
-                            <button class="btn-secondary" onclick="loadKeys()">
-                                <i class="fas fa-sync-alt"></i>
-                                Refresh
-                            </button>
-                        </div>
-                    </div>
-                    <div class="table-container">
-                        <table id="keysTable">
-                            <thead>
-                                <tr>
-                                    <th>Key</th>
-                                    <th>Created</th>
-                                    <th>Expires</th>
-                                    <th>Duration</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Keys will be populated here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <div id="loginMessage" class="message-box"></div>
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Main Panel -->
+    <div id="mainPanel" class="main-panel hidden">
+        <!-- Sidebar -->
+        <nav class="quantum-sidebar">
+            <div class="sidebar-header">
+                <div class="brand-mini">
+                    <i class="fas fa-atom"></i>
+                    <span>Quantum</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <div class="user-profile">
+                <div class="avatar">
+                    <i class="fas fa-user-astronaut"></i>
+                </div>
+                <div class="user-info">
+                    <span class="username" id="sidebarUsername">Admin</span>
+                    <span class="user-role" id="sidebarRole">Super Administrator</span>
+                </div>
+            </div>
+
+            <ul class="sidebar-nav">
+                <li class="nav-item active" data-section="dashboard">
+                    <a href="#">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Quantum Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-section="applications">
+                    <a href="#">
+                        <i class="fas fa-cubes"></i>
+                        <span>Applications</span>
+                        <span class="nav-badge" id="appsCount">0</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-section="keys">
+                    <a href="#">
+                        <i class="fas fa-key"></i>
+                        <span>License Keys</span>
+                        <span class="nav-badge" id="keysCount">0</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-section="analytics">
+                    <a href="#">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Quantum Analytics</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-section="security">
+                    <a href="#">
+                        <i class="fas fa-shield-virus"></i>
+                        <span>Security Center</span>
+                    </a>
+                </li>
+                <li class="nav-section">
+                    <span>SYSTEM</span>
+                </li>
+                <li class="nav-item" data-section="users">
+                    <a href="#">
+                        <i class="fas fa-users-cog"></i>
+                        <span>User Management</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-section="settings">
+                    <a href="#">
+                        <i class="fas fa-sliders-h"></i>
+                        <span>Quantum Settings</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <button class="logout-btn" id="logoutBtn">
+                    <i class="fas fa-rocket"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="quantum-content">
+            <!-- Header -->
+            <header class="content-header">
+                <div class="header-left">
+                    <h1 id="pageTitle">Quantum Dashboard</h1>
+                    <div class="breadcrumb">
+                        <span>Home</span>
+                        <i class="fas fa-chevron-right"></i>
+                        <span id="breadcrumbCurrent">Dashboard</span>
+                    </div>
+                </div>
+                
+                <div class="header-right">
+                    <div class="header-actions">
+                        <button class="action-btn" id="notificationsBtn">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge">3</span>
+                        </button>
+                        <button class="action-btn" id="quickActionsBtn">
+                            <i class="fas fa-bolt"></i>
+                        </button>
+                        <div class="user-menu">
+                            <div class="user-avatar">
+                                <i class="fas fa-user-astronaut"></i>
+                            </div>
+                            <span class="user-name" id="headerUsername">Admin</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Section -->
+            <section id="dashboardSection" class="section">
+                <div class="stats-grid">
+                    <div class="stat-card quantum">
+                        <div class="stat-icon">
+                            <i class="fas fa-cubes"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Active Applications</h3>
+                            <span class="stat-value" id="statApps">0</span>
+                            <span class="stat-change positive">+2 this week</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card quantum">
+                        <div class="stat-icon">
+                            <i class="fas fa-key"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Total Keys</h3>
+                            <span class="stat-value" id="statKeys">0</span>
+                            <span class="stat-change positive">+15 today</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card quantum">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Active Sessions</h3>
+                            <span class="stat-value" id="statSessions">0</span>
+                            <span class="stat-change negative">-3 today</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card quantum">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Total Revenue</h3>
+                            <span class="stat-value" id="statRevenue">$0</span>
+                            <span class="stat-change positive">+$240 today</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-content">
+                    <div class="content-row">
+                        <div class="content-col">
+                            <div class="quantum-card">
+                                <div class="card-header">
+                                    <h3>Recent Activity</h3>
+                                    <button class="card-action">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </div>
+                                <div class="activity-list" id="recentActivity">
+                                    <!-- Activity items will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="content-col">
+                            <div class="quantum-card">
+                                <div class="card-header">
+                                    <h3>Quick Actions</h3>
+                                </div>
+                                <div class="quick-actions">
+                                    <button class="action-card" onclick="quantumPanel.showSection('applications')">
+                                        <i class="fas fa-plus-circle"></i>
+                                        <span>Create App</span>
+                                    </button>
+                                    <button class="action-card" onclick="quantumPanel.showSection('keys')">
+                                        <i class="fas fa-key"></i>
+                                        <span>Generate Key</span>
+                                    </button>
+                                    <button class="action-card">
+                                        <i class="fas fa-chart-bar"></i>
+                                        <span>View Reports</span>
+                                    </button>
+                                    <button class="action-card">
+                                        <i class="fas fa-cog"></i>
+                                        <span>Settings</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Other sections will be added similarly -->
+            <section id="applicationsSection" class="section hidden">
+                <!-- Applications content -->
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Notifications Panel -->
+    <div id="notificationsPanel" class="notifications-panel hidden">
+        <div class="panel-header">
+            <h3>Notifications</h3>
+            <button class="panel-close" id="notificationsClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="notifications-list">
+            <!-- Notifications will be loaded here -->
+        </div>
+    </div>
+
+    <script src="quantum.js"></script>
 </body>
 </html>
