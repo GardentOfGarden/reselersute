@@ -3,285 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECLIPSE | Admin Panel</title>
+    <title>Multi-App Auth Panel</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <!-- Login Screen -->
-        <div id="loginBox" class="login-container">
+        <div id="loginScreen" class="login-container">
             <div class="login-box">
                 <div class="logo">
-                    <i class="fas fa-fire"></i>
-                    <h1>ECLIPSE</h1>
+                    <i class="fas fa-shield-alt"></i>
+                    <h1>AuthPanel</h1>
                 </div>
-                <p class="subtitle">Reseller Admin Panel</p>
+                <p class="subtitle">Multi-Application System</p>
                 <div class="input-group">
-                    <input type="password" id="adminPass" placeholder="Enter admin password">
+                    <input type="password" id="passwordInput" placeholder="Admin password">
                     <button id="loginBtn">Login</button>
                 </div>
-                <p id="loginMsg"></p>
+                <p id="loginMessage"></p>
             </div>
         </div>
 
-        <!-- Main Panel -->
-        <div id="panelBox" class="main-panel hidden">
-            <!-- Sidebar -->
+        <div id="mainPanel" class="main-panel hidden">
             <div class="sidebar">
                 <div class="sidebar-header">
-                    <i class="fas fa-fire"></i>
-                    <h2>ECLIPSE</h2>
+                    <i class="fas fa-shield-alt"></i>
+                    <h2>AuthPanel</h2>
                 </div>
                 <nav class="sidebar-nav">
                     <div class="nav-section">
-                        <h3>Dashboard</h3>
-                        <a href="#" class="nav-item active" onclick="showSection('dashboard')">
-                            <i class="fas fa-key"></i>
-                            License Keys
+                        <h3>Applications</h3>
+                        <a href="#" class="nav-item active" data-section="apps">
+                            <i class="fas fa-box"></i>
+                            My Apps
                         </a>
-                        <a href="#" class="nav-item" onclick="showSection('stats')">
-                            <i class="fas fa-chart-pie"></i>
-                            Statistics
+                        <a href="#" class="nav-item" data-section="create">
+                            <i class="fas fa-plus"></i>
+                            Create App
                         </a>
                     </div>
                     <div class="nav-section">
                         <h3>Management</h3>
-                        <a href="#" class="nav-item" onclick="showSection('banned')">
-                            <i class="fas fa-ban"></i>
-                            Banned Keys
+                        <a href="#" class="nav-item" data-section="keys">
+                            <i class="fas fa-key"></i>
+                            License Keys
                         </a>
-                        <a href="#" class="nav-item" onclick="showSection('screenshots')">
-                            <i class="fas fa-camera"></i>
-                            Screenshots
-                        </a>
-                    </div>
-                    <div class="nav-section">
-                        <h3>Settings</h3>
-                        <a href="#" class="nav-item" onclick="showSection('settings')">
-                            <i class="fas fa-cog"></i>
-                            Settings
-                        </a>
-                        <a href="#" class="nav-item" onclick="logout()">
-                            <i class="fas fa-sign-out-alt"></i>
-                            Logout
+                        <a href="#" class="nav-item" data-section="analytics">
+                            <i class="fas fa-chart-bar"></i>
+                            Analytics
                         </a>
                     </div>
                 </nav>
             </div>
 
-            <!-- Main Content -->
             <div class="main-content">
-                <!-- Header -->
                 <header class="content-header">
-                    <h1 id="sectionTitle">Dashboard</h1>
+                    <h1 id="pageTitle">Applications</h1>
                     <div class="header-actions">
                         <div class="user-info">
-                            <span>Admin</span>
-                            <i class="fas fa-user-shield"></i>
+                            <span id="username">Admin</span>
+                            <i class="fas fa-user"></i>
                         </div>
                     </div>
                 </header>
 
-                <!-- Dashboard Section -->
-                <div id="dashboardSection" class="section">
-                    <!-- Stats Overview -->
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-key"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3>Total Keys</h3>
-                                <span id="totalKeys">0</span>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-check-circle"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3>Active Keys</h3>
-                                <span id="activeKeys">0</span>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-ban"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3>Banned Keys</h3>
-                                <span id="bannedKeys">0</span>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <i class="fas fa-clock"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3>Expired Keys</h3>
-                                <span id="expiredKeys">0</span>
-                            </div>
-                        </div>
-                    </div>
+                <div id="appsSection" class="section">
+                    <div class="apps-grid" id="appsGrid"></div>
+                </div>
 
-                    <!-- Generate Key Section -->
+                <div id="createSection" class="section hidden">
                     <div class="card">
-                        <h2><i class="fas fa-bolt"></i> Key Generator</h2>
-                        <div class="generate-form">
-                            <div class="input-group">
-                                <label for="durationSelect">Duration:</label>
-                                <select id="durationSelect">
-                                    <option value="3600000">1 Hour</option>
-                                    <option value="86400000">1 Day</option>
-                                    <option value="604800000">1 Week</option>
-                                    <option value="2592000000">1 Month</option>
-                                    <option value="31536000000">1 Year</option>
-                                </select>
+                        <h2>Create New Application</h2>
+                        <form id="createAppForm">
+                            <div class="form-group">
+                                <label>Application Name</label>
+                                <input type="text" id="appName" required>
                             </div>
-                            <div class="input-group">
-                                <label for="maxActivations">Max Activations:</label>
-                                <input type="number" id="maxActivations" min="1" value="1">
+                            <div class="form-group">
+                                <label>Owner ID</label>
+                                <input type="text" id="ownerId" required>
                             </div>
-                            <button id="generateBtn" class="btn-primary">
-                                <i class="fas fa-plus"></i>
-                                Generate Key
-                            </button>
-                        </div>
-                        <div id="genMsg" class="generated-key hidden">
-                            <h4>Generated Key:</h4>
-                            <code id="generatedKeyText"></code>
-                            <button id="copyKeyBtn" class="btn-secondary">
-                                <i class="fas fa-copy"></i>
-                                Copy Key
-                            </button>
-                        </div>
+                            <div class="form-group">
+                                <label>Settings</label>
+                                <div class="checkbox-group">
+                                    <label><input type="checkbox" id="hwidLock" checked> HWID Lock</label>
+                                    <label><input type="checkbox" id="screenshotRequired" checked> Screenshot Required</label>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-primary">Create Application</button>
+                        </form>
                     </div>
+                </div>
 
-                    <!-- Keys List -->
+                <div id="keysSection" class="section hidden">
                     <div class="card">
-                        <div class="card-header">
-                            <h2><i class="fas fa-key"></i> All Keys</h2>
-                            <div class="header-actions">
-                                <input type="text" id="searchInput" placeholder="Search keys...">
-                                <button class="btn-secondary" onclick="loadKeys()">
-                                    <i class="fas fa-sync-alt"></i>
-                                    Refresh
-                                </button>
-                            </div>
+                        <h2>License Keys</h2>
+                        <div class="toolbar">
+                            <select id="appSelector"></select>
+                            <input type="text" id="keySearch" placeholder="Search keys...">
+                            <button class="btn-primary" id="generateKeyBtn">Generate Key</button>
                         </div>
                         <div class="table-container">
                             <table id="keysTable">
                                 <thead>
                                     <tr>
                                         <th>Key</th>
+                                        <th>App</th>
                                         <th>Created</th>
                                         <th>Expires</th>
-                                        <th>HWID</th>
-                                        <th>Activations</th>
                                         <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <!-- Keys will be populated here -->
-                                </tbody>
+                                <tbody></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
 
-                <!-- Statistics Section -->
-                <div id="statsSection" class="section hidden">
-                    <div class="card">
-                        <h2><i class="fas fa-chart-pie"></i> Statistics</h2>
-                        <div class="stats-charts">
-                            <div class="chart-container">
-                                <canvas id="keysChart"></canvas>
-                            </div>
-                            <div class="stats-details">
-                                <div class="stat-detail">
-                                    <span class="stat-label">Total Keys Generated:</span>
-                                    <span class="stat-value" id="statTotalKeys">0</span>
-                                </div>
-                                <div class="stat-detail">
-                                    <span class="stat-label">Active Sessions:</span>
-                                    <span class="stat-value" id="statActiveSessions">0</span>
-                                </div>
-                                <div class="stat-detail">
-                                    <span class="stat-label">Screenshots Captured:</span>
-                                    <span class="stat-value" id="statScreenshots">0</span>
-                                </div>
+                <div id="analyticsSection" class="section hidden">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-box"></i></div>
+                            <div class="stat-info">
+                                <h3>Total Apps</h3>
+                                <span id="totalApps">0</span>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Banned Keys Section -->
-                <div id="bannedSection" class="section hidden">
-                    <div class="card">
-                        <h2><i class="fas fa-ban"></i> Banned Keys</h2>
-                        <div class="table-container">
-                            <table id="bannedTable">
-                                <thead>
-                                    <tr>
-                                        <th>Key</th>
-                                        <th>Created</th>
-                                        <th>HWID</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Banned keys will be populated here -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Screenshots Section -->
-                <div id="screenshotsSection" class="section hidden">
-                    <div class="card">
-                        <h2><i class="fas fa-camera"></i> Screenshots</h2>
-                        <div class="screenshots-controls">
-                            <input type="text" id="screenshotSearch" placeholder="Search by key...">
-                            <button class="btn-secondary" onclick="loadScreenshots()">
-                                <i class="fas fa-sync-alt"></i>
-                                Refresh
-                            </button>
-                        </div>
-                        <div class="screenshots-grid" id="screenshotsGrid">
-                            <!-- Screenshots will be populated here -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Settings Section -->
-                <div id="settingsSection" class="section hidden">
-                    <div class="card">
-                        <h2><i class="fas fa-cog"></i> Settings</h2>
-                        <div class="settings-form">
-                            <div class="setting-item">
-                                <label for="autoRefresh">Auto Refresh (seconds):</label>
-                                <input type="number" id="autoRefresh" min="0" value="30">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-key"></i></div>
+                            <div class="stat-info">
+                                <h3>Total Keys</h3>
+                                <span id="totalKeys">0</span>
                             </div>
-                            <div class="setting-item">
-                                <label for="theme">Theme:</label>
-                                <select id="theme">
-                                    <option value="dark-red">Dark Red</option>
-                                    <option value="dark-blue">Dark Blue</option>
-                                    <option value="dark-green">Dark Green</option>
-                                    <option value="dark-purple">Dark Purple</option>
-                                </select>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-users"></i></div>
+                            <div class="stat-info">
+                                <h3>Active Sessions</h3>
+                                <span id="activeSessions">0</span>
                             </div>
-                            <div class="setting-item">
-                                <label for="apiUrl">API URL:</label>
-                                <input type="text" id="apiUrl" value="/api/keys">
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-camera"></i></div>
+                            <div class="stat-info">
+                                <h3>Screenshots</h3>
+                                <span id="totalScreenshots">0</span>
                             </div>
-                            <button class="btn-primary" onclick="saveSettings()">
-                                <i class="fas fa-save"></i>
-                                Save Settings
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -289,24 +157,6 @@
         </div>
     </div>
 
-    <!-- Screenshot Modal -->
-    <div id="screenshotModal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Screenshot Preview</h3>
-                <span class="close" onclick="closeModal('screenshotModal')">&times;</span>
-            </div>
-            <div class="modal-body">
-                <img id="screenshotImage" src="" alt="Screenshot">
-                <div class="screenshot-info">
-                    <p>Key: <span id="screenshotKey"></span></p>
-                    <p>Timestamp: <span id="screenshotTimestamp"></span></p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="admin.js"></script>
 </body>
 </html>
