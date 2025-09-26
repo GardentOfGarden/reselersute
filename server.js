@@ -1,8 +1,12 @@
-const express = require("express");
-const fs = require("fs");
-const path = require("path");
-const cors = require("cors");
-const crypto = require("crypto");
+import express from "express";
+import fs from "fs";
+import path from "path";
+import cors from "cors";
+import crypto from "crypto";
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,6 +19,7 @@ app.use(express.static("public"));
 const dbFile = path.join(__dirname, "database.json");
 const screenshotsDir = path.join(__dirname, "screenshots");
 
+// Ensure directories exist
 if (!fs.existsSync(screenshotsDir)) {
     fs.mkdirSync(screenshotsDir, { recursive: true });
 }
@@ -38,10 +43,12 @@ function loadDatabase() {
             statistics: {
                 totalLogins: 0,
                 totalInjections: 0,
-                totalScreenshots: 0
+                totalScreenshots: 0,
+                totalKeys: 0
             }
         };
         fs.writeFileSync(dbFile, JSON.stringify(initialData, null, 2));
+        return initialData;
     }
     return JSON.parse(fs.readFileSync(dbFile, "utf-8"));
 }
@@ -72,6 +79,7 @@ function generateLicenseKey(appId, durationMs, maxActivations = 1) {
     };
 }
 
+// Auth endpoints
 app.post("/api/auth/login", (req, res) => {
     const { password } = req.body;
     if (password === ADMIN_PASSWORD) {
@@ -85,6 +93,7 @@ app.post("/api/auth/login", (req, res) => {
     }
 });
 
+// Apps endpoints
 app.get("/api/apps", (req, res) => {
     const db = loadDatabase();
     res.json(db.apps);
@@ -109,6 +118,7 @@ app.post("/api/apps", (req, res) => {
     res.json({ success: true, app: newApp });
 });
 
+// Keys endpoints
 app.get("/api/keys", (req, res) => {
     const db = loadDatabase();
     res.json(db.keys);
@@ -117,6 +127,10 @@ app.get("/api/keys", (req, res) => {
 app.post("/api/keys", (req, res) => {
     const { appId, durationMs, maxActivations = 1, notes = "" } = req.body;
     const db = loadDatabase();
+    
+    if (!appId) {
+        return res.status(400).json({ success: false, message: "App ID is required" });
+    }
     
     const key = generateLicenseKey(appId, durationMs, maxActivations);
     key.notes = notes;
@@ -174,6 +188,7 @@ app.post("/api/keys/validate", (req, res) => {
         });
     }
     
+    // Update key data if valid
     if (!keyData.hwid) {
         keyData.hwid = hwid;
         keyData.activations += 1;
@@ -236,6 +251,7 @@ app.delete("/api/keys/:id", (req, res) => {
     }
 });
 
+// Screenshots endpoints
 app.post("/api/screenshots", (req, res) => {
     const { key, hwid, screenshot, app } = req.body;
     const db = loadDatabase();
@@ -290,21 +306,28 @@ app.get("/api/screenshots/:keyId/:screenshotId", (req, res) => {
     res.sendFile(screenshot.path);
 });
 
+// Statistics endpoint
 app.get("/api/statistics", (req, res) => {
     const db = loadDatabase();
+    
+    const activeKeys = db.keys.filter(k => !k.banned && (!k.expiresAt || new Date(k.expiresAt) > new Date())).length;
+    const bannedKeys = db.keys.filter(k => k.banned).length;
+    const expiredKeys = db.keys.filter(k => !k.banned && k.expiresAt && new Date(k.expiresAt) < new Date()).length;
     
     const stats = {
         totalApps: db.apps.length,
         totalKeys: db.keys.length,
-        activeKeys: db.keys.filter(k => !k.banned && (!k.expiresAt || new Date(k.expiresAt) > new Date())).length,
-        bannedKeys: db.keys.filter(k => k.banned).length,
-        expiredKeys: db.keys.filter(k => !k.banned && k.expiresAt && new Date(k.expiresAt) < new Date()).length,
-        ...db.statistics
+        activeKeys: activeKeys,
+        bannedKeys: bannedKeys,
+        expiredKeys: expiredKeys,
+        totalLogins: db.statistics.totalLogins || 0,
+        totalScreenshots: db.statistics.totalScreenshots || 0
     };
     
     res.json(stats);
 });
 
+// Analytics endpoint
 app.get("/api/analytics/usage", (req, res) => {
     const db = loadDatabase();
     
@@ -327,10 +350,13 @@ app.get("/api/analytics/usage", (req, res) => {
     
     const appUsage = db.apps.map(app => {
         const appKeys = db.keys.filter(k => k.appId === app.id);
+        const activeAppKeys = appKeys.filter(k => !k.banned && (!k.expiresAt || new Date(k.expiresAt) > new Date()));
+        
         return {
             app: app.name,
             totalKeys: appKeys.length,
-            activeKeys: appKeys.filter(k => !k.banned && (!k.expiresAt || new Date(k.expiresAt) > new Date())).length
+            activeKeys: activeAppKeys.length,
+            totalActivations: appKeys.reduce((sum, k) => sum + k.activations, 0)
         };
     });
     
@@ -345,8 +371,27 @@ app.get("/api/analytics/usage", (req, res) => {
     });
 });
 
+// Serve admin panel
+app.get("/admin", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
+
+app.get("/", (req, res) => {
+    res.redirect("/admin");
+});
+
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+    res.json({ 
+        status: "OK", 
+        timestamp: new Date().toISOString(),
+        version: "1.0.0"
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`🚀 Eclipse Management System running on port ${PORT}`);
     console.log(`🔐 Admin panel: http://localhost:${PORT}`);
     console.log(`📊 Default password: ${ADMIN_PASSWORD}`);
+    console.log(`❤️  Health check: http://localhost:${PORT}/api/health`);
 });
