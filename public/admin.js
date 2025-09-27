@@ -40,7 +40,7 @@ async function login() {
         if (data.success) {
             document.getElementById('loginBox').classList.add("hidden");
             document.getElementById('panelBox').classList.remove("hidden");
-            localStorage.setItem('keyauth_auth', 'true');
+            localStorage.setItem('eclipse_auth', 'true');
             loadApps();
             loadKeys();
             loadStats();
@@ -53,7 +53,7 @@ async function login() {
 }
 
 function checkAuth() {
-    if (localStorage.getItem('keyauth_auth')) {
+    if (localStorage.getItem('eclipse_auth')) {
         document.getElementById('loginBox').classList.add("hidden");
         document.getElementById('panelBox').classList.remove("hidden");
         loadApps();
@@ -149,9 +149,7 @@ async function loadStats() {
     try {
         const res = await fetch("/api/stats");
         const stats = await res.json();
-        const appsRes = await fetch("/api/apps");
-        const apps = await appsRes.json();
-        document.getElementById('totalApps').textContent = apps.length;
+        document.getElementById('totalApps').textContent = (await (await fetch("/api/apps")).json()).length;
         document.getElementById('totalKeys').textContent = stats.totalKeys;
         document.getElementById('activeKeys').textContent = stats.activeKeys;
         document.getElementById('bannedKeys').textContent = stats.bannedKeys;
@@ -326,6 +324,6 @@ function showSection(section) {
 }
 
 function logout() {
-    localStorage.removeItem('keyauth_auth');
+    localStorage.removeItem('eclipse_auth');
     window.location.reload();
 }
