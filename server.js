@@ -1,16 +1,11 @@
-import express from "express";
-import fs from "fs";
-import path from "path";
-import cors from "cors";
-import crypto from "crypto";
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
+const cors = require("cors");
+const crypto = require("crypto");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "eclipse2024";
 
 app.use(cors());
 app.use(express.json({ limit: '100mb' }));
@@ -19,379 +14,265 @@ app.use(express.static("public"));
 const dbFile = path.join(__dirname, "database.json");
 const screenshotsDir = path.join(__dirname, "screenshots");
 
-// Ensure directories exist
 if (!fs.existsSync(screenshotsDir)) {
-    fs.mkdirSync(screenshotsDir, { recursive: true });
+  fs.mkdirSync(screenshotsDir, { recursive: true });
 }
 
-const defaultApps = [
-    { id: "eclipse", name: "Eclipse", owner: "admin", version: "1.2", status: "active" },
-    { id: "neon", name: "Neon", owner: "admin", version: "2.1", status: "active" },
-    { id: "phantom", name: "Phantom", owner: "admin", version: "1.0", status: "active" }
-];
+if (!fs.existsSync(dbFile)) {
+  const initialData = {
+    apps: [
+      {
+        id: "eclipse",
+        name: "ECLIPSE",
+        owner: "admin",
+        secret: crypto.randomBytes(32).toString('hex'),
+        createdAt: new Date().toISOString()
+      }
+    ],
+    keys: [],
+    settings: {
+      adminPassword: "admin123",
+      maxScreenshotSize: 5242880,
+      sessionTimeout: 3600000
+    }
+  };
+  fs.writeFileSync(dbFile, JSON.stringify(initialData, null, 2));
+}
 
 function loadDatabase() {
-    if (!fs.existsSync(dbFile)) {
-        const initialData = {
-            apps: defaultApps,
-            keys: [],
-            settings: {
-                maxActivations: 3,
-                screenshotEnabled: true,
-                hwidLock: true
-            },
-            statistics: {
-                totalLogins: 0,
-                totalInjections: 0,
-                totalScreenshots: 0,
-                totalKeys: 0
-            }
-        };
-        fs.writeFileSync(dbFile, JSON.stringify(initialData, null, 2));
-        return initialData;
-    }
-    return JSON.parse(fs.readFileSync(dbFile, "utf-8"));
+  return JSON.parse(fs.readFileSync(dbFile, "utf-8"));
 }
 
 function saveDatabase(data) {
-    fs.writeFileSync(dbFile, JSON.stringify(data, null, 2));
+  fs.writeFileSync(dbFile, JSON.stringify(data, null, 2));
 }
 
-function generateLicenseKey(appId, durationMs, maxActivations = 1) {
-    const segments = [];
-    for (let i = 0; i < 3; i++) {
-        segments.push(crypto.randomBytes(4).toString('hex').toUpperCase());
-    }
-    
-    return {
-        id: crypto.randomBytes(8).toString('hex'),
-        value: `ECLIPSE-${segments[0]}-${segments[1]}-${segments[2]}`,
-        appId: appId,
-        banned: false,
-        expiresAt: durationMs ? new Date(Date.now() + durationMs).toISOString() : null,
-        createdAt: new Date().toISOString(),
-        hwid: null,
-        activations: 0,
-        maxActivations: maxActivations,
-        lastActivation: null,
-        screenshots: [],
-        notes: ""
-    };
+function generateAppToken(appId, secret) {
+  return crypto.createHash('sha256').update(appId + secret + Date.now()).digest('hex');
 }
 
-// Auth endpoints
-app.post("/api/auth/login", (req, res) => {
-    const { password } = req.body;
-    if (password === ADMIN_PASSWORD) {
-        res.json({ 
-            success: true, 
-            token: crypto.randomBytes(32).toString('hex'),
-            user: { name: "Admin", role: "administrator" }
-        });
-    } else {
-        res.status(401).json({ success: false, message: "Invalid credentials" });
+function authenticateApp(req, res, next) {
+  const { appid, token } = req.headers;
+  
+  if (!appid || !token) {
+    return res.status(401).json({ error: "App authentication required" });
+  }
+
+  const db = loadDatabase();
+  const app = db.apps.find(a => a.id === appid);
+  
+  if (!app || app.token !== token) {
+    return res.status(401).json({ error: "Invalid app credentials" });
+  }
+  
+  req.appData = app;
+  next();
+}
+
+app.post("/api/admin/login", (req, res) => {
+  const { password } = req.body;
+  const db = loadDatabase();
+  
+  if (password === db.settings.adminPassword) {
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    res.json({ success: true, token: sessionToken });
+  } else {
+    res.json({ success: false, message: "Invalid password" });
+  }
+});
+
+app.post("/api/app/register", (req, res) => {
+  const { name, owner, adminPassword } = req.body;
+  const db = loadDatabase();
+  
+  if (adminPassword !== db.settings.adminPassword) {
+    return res.status(401).json({ error: "Invalid admin password" });
+  }
+  
+  const appId = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const existingApp = db.apps.find(a => a.id === appId);
+  
+  if (existingApp) {
+    return res.status(400).json({ error: "App already exists" });
+  }
+  
+  const newApp = {
+    id: appId,
+    name,
+    owner,
+    secret: crypto.randomBytes(32).toString('hex'),
+    token: generateAppToken(appId, crypto.randomBytes(32).toString('hex')),
+    createdAt: new Date().toISOString(),
+    isActive: true
+  };
+  
+  db.apps.push(newApp);
+  saveDatabase(db);
+  
+  res.json({ 
+    success: true, 
+    app: {
+      id: newApp.id,
+      name: newApp.name,
+      token: newApp.token
     }
+  });
 });
 
-// Apps endpoints
-app.get("/api/apps", (req, res) => {
-    const db = loadDatabase();
-    res.json(db.apps);
-});
-
-app.post("/api/apps", (req, res) => {
-    const { name, owner, version } = req.body;
-    const db = loadDatabase();
-    
-    const newApp = {
-        id: name.toLowerCase().replace(/\s+/g, '-'),
-        name: name,
-        owner: owner,
-        version: version,
-        status: "active",
-        createdAt: new Date().toISOString()
-    };
-    
-    db.apps.push(newApp);
+app.post("/api/:appid/auth/check", authenticateApp, (req, res) => {
+  const { value, hwid } = req.body;
+  const db = loadDatabase();
+  
+  const key = db.keys.find(k => k.value === value && k.appid === req.appData.id);
+  if (!key) return res.json({ valid: false, reason: "not_found" });
+  if (key.banned) return res.json({ valid: false, reason: "banned" });
+  if (key.expiresAt && new Date(key.expiresAt) < new Date()) {
+    return res.json({ valid: false, reason: "expired" });
+  }
+  
+  if (key.hwid && key.hwid !== hwid) {
+    return res.json({ valid: false, reason: "hwid_mismatch" });
+  }
+  
+  if (!key.hwid) {
+    key.hwid = hwid;
+    key.activations += 1;
+    key.lastActivation = new Date().toISOString();
     saveDatabase(db);
-    
-    res.json({ success: true, app: newApp });
+  }
+  
+  res.json({ 
+    valid: true, 
+    app: {
+      name: req.appData.name,
+      owner: req.appData.owner
+    },
+    key: {
+      expiresAt: key.expiresAt,
+      createdAt: key.createdAt,
+      activations: key.activations,
+      maxActivations: key.maxActivations
+    }
+  });
 });
 
-// Keys endpoints
-app.get("/api/keys", (req, res) => {
-    const db = loadDatabase();
-    res.json(db.keys);
-});
-
-app.post("/api/keys", (req, res) => {
-    const { appId, durationMs, maxActivations = 1, notes = "" } = req.body;
-    const db = loadDatabase();
-    
-    if (!appId) {
-        return res.status(400).json({ success: false, message: "App ID is required" });
+app.post("/api/:appid/auth/screenshot", authenticateApp, (req, res) => {
+  const { key: keyValue, hwid, screenshot } = req.body;
+  const db = loadDatabase();
+  
+  const key = db.keys.find(k => k.value === keyValue && k.appid === req.appData.id);
+  if (!key) return res.status(404).json({ error: "Key not found" });
+  if (key.hwid && key.hwid !== hwid) {
+    return res.status(403).json({ error: "HWID mismatch" });
+  }
+  
+  const screenshotId = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}`;
+  const screenshotPath = path.join(screenshotsDir, `${screenshotId}.png`);
+  
+  const base64Data = screenshot.replace(/^data:image\/png;base64,/, "");
+  
+  fs.writeFile(screenshotPath, base64Data, 'base64', (err) => {
+    if (err) {
+      console.error("Screenshot save error:", err);
+      return res.status(500).json({ error: "Failed to save screenshot" });
     }
     
-    const key = generateLicenseKey(appId, durationMs, maxActivations);
-    key.notes = notes;
-    db.keys.push(key);
-    
-    db.statistics.totalKeys = db.keys.length;
-    saveDatabase(db);
-    
-    res.json({ success: true, key: key });
-});
-
-app.post("/api/keys/validate", (req, res) => {
-    const { key, hwid, app, owner } = req.body;
-    const db = loadDatabase();
-    
-    const keyData = db.keys.find(k => k.value === key && k.appId === app);
-    
-    if (!keyData) {
-        return res.json({ 
-            valid: false, 
-            reason: "not_found",
-            message: "License key not found for this application"
-        });
-    }
-    
-    if (keyData.banned) {
-        return res.json({ 
-            valid: false, 
-            reason: "banned",
-            message: "This key has been banned"
-        });
-    }
-    
-    if (keyData.expiresAt && new Date(keyData.expiresAt) < new Date()) {
-        return res.json({ 
-            valid: false, 
-            reason: "expired",
-            message: "License key has expired"
-        });
-    }
-    
-    if (keyData.hwid && keyData.hwid !== hwid) {
-        return res.json({ 
-            valid: false, 
-            reason: "hwid_mismatch",
-            message: "HWID does not match registered device"
-        });
-    }
-    
-    if (!keyData.hwid && keyData.activations >= keyData.maxActivations) {
-        return res.json({ 
-            valid: false, 
-            reason: "max_activations",
-            message: "Maximum activations reached"
-        });
-    }
-    
-    // Update key data if valid
-    if (!keyData.hwid) {
-        keyData.hwid = hwid;
-        keyData.activations += 1;
-        keyData.lastActivation = new Date().toISOString();
-        db.statistics.totalLogins += 1;
-    }
+    if (!key.screenshots) key.screenshots = [];
+    key.screenshots.push({
+      id: screenshotId,
+      timestamp: new Date().toISOString(),
+      path: screenshotPath
+    });
     
     saveDatabase(db);
-    
-    res.json({ 
-        valid: true, 
-        app: keyData.appId,
-        expiresAt: keyData.expiresAt,
-        createdAt: keyData.createdAt,
-        activations: keyData.activations,
-        maxActivations: keyData.maxActivations
-    });
+    res.json({ success: true, id: screenshotId });
+  });
 });
 
-app.post("/api/keys/:id/ban", (req, res) => {
-    const { id } = req.params;
-    const db = loadDatabase();
-    
-    const keyIndex = db.keys.findIndex(k => k.id === id);
-    if (keyIndex !== -1) {
-        db.keys[keyIndex].banned = true;
-        saveDatabase(db);
-        res.json({ success: true });
-    } else {
-        res.status(404).json({ success: false, message: "Key not found" });
-    }
+app.post("/api/admin/keys/generate", (req, res) => {
+  const { appid, durationMs, maxActivations = 1, note } = req.body;
+  const db = loadDatabase();
+  
+  const app = db.apps.find(a => a.id === appid);
+  if (!app) return res.status(404).json({ error: "App not found" });
+  
+  const keyValue = `ECL-${appid.toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+  
+  const newKey = {
+    value: keyValue,
+    appid,
+    banned: false,
+    expiresAt: durationMs ? new Date(Date.now() + durationMs).toISOString() : null,
+    createdAt: new Date().toISOString(),
+    hwid: null,
+    activations: 0,
+    maxActivations,
+    lastActivation: null,
+    screenshots: [],
+    note: note || ""
+  };
+  
+  db.keys.push(newKey);
+  saveDatabase(db);
+  
+  res.json({ success: true, key: newKey });
 });
 
-app.post("/api/keys/:id/unban", (req, res) => {
-    const { id } = req.params;
-    const db = loadDatabase();
-    
-    const keyIndex = db.keys.findIndex(k => k.id === id);
-    if (keyIndex !== -1) {
-        db.keys[keyIndex].banned = false;
-        saveDatabase(db);
-        res.json({ success: true });
-    } else {
-        res.status(404).json({ success: false, message: "Key not found" });
-    }
+app.get("/api/admin/keys", (req, res) => {
+  const db = loadDatabase();
+  res.json({ keys: db.keys, apps: db.apps });
 });
 
-app.delete("/api/keys/:id", (req, res) => {
-    const { id } = req.params;
-    const db = loadDatabase();
-    
-    const keyIndex = db.keys.findIndex(k => k.id === id);
-    if (keyIndex !== -1) {
-        db.keys.splice(keyIndex, 1);
-        db.statistics.totalKeys = db.keys.length;
-        saveDatabase(db);
-        res.json({ success: true });
-    } else {
-        res.status(404).json({ success: false, message: "Key not found" });
-    }
+app.post("/api/admin/keys/ban", (req, res) => {
+  const { value } = req.body;
+  const db = loadDatabase();
+  
+  const key = db.keys.find(k => k.value === value);
+  if (key) {
+    key.banned = true;
+    saveDatabase(db);
+  }
+  
+  res.json({ success: true });
 });
 
-// Screenshots endpoints
-app.post("/api/screenshots", (req, res) => {
-    const { key, hwid, screenshot, app } = req.body;
-    const db = loadDatabase();
-    
-    const keyData = db.keys.find(k => k.value === key && k.appId === app);
-    if (!keyData) {
-        return res.status(404).json({ success: false, message: "Key not found" });
-    }
-    
-    if (keyData.hwid && keyData.hwid !== hwid) {
-        return res.status(403).json({ success: false, message: "HWID mismatch" });
-    }
-    
-    const screenshotId = crypto.randomBytes(8).toString('hex');
-    const screenshotPath = path.join(screenshotsDir, `${screenshotId}.png`);
-    
-    const base64Data = screenshot.replace(/^data:image\/png;base64,/, "");
-    
-    fs.writeFile(screenshotPath, base64Data, 'base64', (err) => {
-        if (err) {
-            console.error("Error saving screenshot:", err);
-            return res.status(500).json({ success: false, message: "Failed to save screenshot" });
-        }
-        
-        keyData.screenshots.push({
-            id: screenshotId,
-            timestamp: new Date().toISOString(),
-            path: screenshotPath
-        });
-        
-        db.statistics.totalScreenshots += 1;
-        saveDatabase(db);
-        
-        res.json({ success: true, id: screenshotId });
-    });
+app.post("/api/admin/keys/unban", (req, res) => {
+  const { value } = req.body;
+  const db = loadDatabase();
+  
+  const key = db.keys.find(k => k.value === value);
+  if (key) {
+    key.banned = false;
+    saveDatabase(db);
+  }
+  
+  res.json({ success: true });
 });
 
-app.get("/api/screenshots/:keyId/:screenshotId", (req, res) => {
-    const { keyId, screenshotId } = req.params;
-    const db = loadDatabase();
-    
-    const keyData = db.keys.find(k => k.id === keyId);
-    if (!keyData) {
-        return res.status(404).send("Key not found");
-    }
-    
-    const screenshot = keyData.screenshots.find(s => s.id === screenshotId);
-    if (!screenshot || !fs.existsSync(screenshot.path)) {
-        return res.status(404).send("Screenshot not found");
-    }
-    
-    res.sendFile(screenshot.path);
+app.delete("/api/admin/keys/:value", (req, res) => {
+  const { value } = req.params;
+  const db = loadDatabase();
+  
+  db.keys = db.keys.filter(k => k.value !== value);
+  saveDatabase(db);
+  
+  res.json({ success: true });
 });
 
-// Statistics endpoint
-app.get("/api/statistics", (req, res) => {
-    const db = loadDatabase();
-    
-    const activeKeys = db.keys.filter(k => !k.banned && (!k.expiresAt || new Date(k.expiresAt) > new Date())).length;
-    const bannedKeys = db.keys.filter(k => k.banned).length;
-    const expiredKeys = db.keys.filter(k => !k.banned && k.expiresAt && new Date(k.expiresAt) < new Date()).length;
-    
-    const stats = {
-        totalApps: db.apps.length,
-        totalKeys: db.keys.length,
-        activeKeys: activeKeys,
-        bannedKeys: bannedKeys,
-        expiredKeys: expiredKeys,
-        totalLogins: db.statistics.totalLogins || 0,
-        totalScreenshots: db.statistics.totalScreenshots || 0
-    };
-    
-    res.json(stats);
-});
-
-// Analytics endpoint
-app.get("/api/analytics/usage", (req, res) => {
-    const db = loadDatabase();
-    
-    const last30Days = Array.from({ length: 30 }, (_, i) => {
-        const date = new Date();
-        date.setDate(date.getDate() - (29 - i));
-        return date.toISOString().split('T')[0];
-    });
-    
-    const usageByDay = last30Days.map(date => {
-        const dayLogins = db.keys.reduce((count, key) => {
-            if (key.lastActivation && key.lastActivation.startsWith(date)) {
-                return count + 1;
-            }
-            return count;
-        }, 0);
-        
-        return { date, logins: dayLogins };
-    });
-    
-    const appUsage = db.apps.map(app => {
-        const appKeys = db.keys.filter(k => k.appId === app.id);
-        const activeAppKeys = appKeys.filter(k => !k.banned && (!k.expiresAt || new Date(k.expiresAt) > new Date()));
-        
-        return {
-            app: app.name,
-            totalKeys: appKeys.length,
-            activeKeys: activeAppKeys.length,
-            totalActivations: appKeys.reduce((sum, k) => sum + k.activations, 0)
-        };
-    });
-    
-    res.json({
-        dailyUsage: usageByDay,
-        appUsage: appUsage,
-        topKeys: db.keys.slice(0, 5).map(k => ({
-            value: k.value.substring(0, 8) + '...',
-            activations: k.activations,
-            lastUsed: k.lastActivation
-        }))
-    });
-});
-
-// Serve admin panel
-app.get("/admin", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "admin.html"));
-});
-
-app.get("/", (req, res) => {
-    res.redirect("/admin");
-});
-
-// Health check endpoint
-app.get("/api/health", (req, res) => {
-    res.json({ 
-        status: "OK", 
-        timestamp: new Date().toISOString(),
-        version: "1.0.0"
-    });
+app.get("/api/admin/stats", (req, res) => {
+  const db = loadDatabase();
+  const stats = {
+    totalApps: db.apps.length,
+    totalKeys: db.keys.length,
+    activeKeys: db.keys.filter(k => !k.banned && (!k.expiresAt || new Date(k.expiresAt) > new Date())).length,
+    bannedKeys: db.keys.filter(k => k.banned).length,
+    expiredKeys: db.keys.filter(k => !k.banned && k.expiresAt && new Date(k.expiresAt) < new Date()).length,
+    totalScreenshots: db.keys.reduce((sum, k) => sum + (k.screenshots ? k.screenshots.length : 0), 0)
+  };
+  
+  res.json(stats);
 });
 
 app.listen(PORT, () => {
-    console.log(`🚀 Eclipse Management System running on port ${PORT}`);
-    console.log(`🔐 Admin panel: http://localhost:${PORT}`);
-    console.log(`📊 Default password: ${ADMIN_PASSWORD}`);
-    console.log(`❤️  Health check: http://localhost:${PORT}/api/health`);
+  console.log(`🚀 Eclipse Multi-App System running on port ${PORT}`);
 });
