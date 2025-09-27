@@ -29,7 +29,7 @@ function saveDB(db) {
 
 function generateKey(durationMs, owner_id, maxActivations) {
     return {
-        value: 'KEYAUTH-' + randomBytes(8).toString('hex').toUpperCase(),
+        value: 'ECLIPSE-' + randomBytes(8).toString('hex').toUpperCase(),
         owner_id,
         banned: false,
         expires_at: durationMs ? new Date(Date.now() + durationMs).toISOString() : null,
@@ -123,7 +123,7 @@ app.post('/api/keys/delete', (req, res) => {
 });
 
 app.post('/api/auth', (req, res) => {
-    const { key, hwid } = req.body;
+    const { key, hwid, app_name, owner_id } = req.body;
     const db = loadDB();
     const keyData = db.keys.find(k => k.value === key);
     if (!keyData) return res.json({ valid: false, reason: 'not_found' });
@@ -134,6 +134,8 @@ app.post('/api/auth', (req, res) => {
         return res.json({ valid: false, reason: 'hwid_mismatch' });
     if (!keyData.hwid && keyData.activations >= keyData.max_activations)
         return res.json({ valid: false, reason: 'max_activations' });
+    if (keyData.owner_id !== owner_id || !db.apps.some(a => a.name === app_name && a.owner_id === owner_id))
+        return res.json({ valid: false, reason: 'invalid_app_or_owner' });
 
     if (!keyData.hwid) {
         keyData.hwid = hwid;
@@ -156,6 +158,11 @@ app.get('/api/stats', (req, res) => {
     res.json({ totalKeys, activeKeys, bannedKeys, expiredKeys });
 });
 
+app.get('/api/keys', (req, res) => {
+    const db = loadDB();
+    res.json(db.keys);
+});
+
 app.listen(PORT, () => {
-    console.log(`🚀 KeyAuth-Inspired Server running on port ${PORT}`);
+    console.log(`🚀 Eclipse Server running on port ${PORT}`);
 });
