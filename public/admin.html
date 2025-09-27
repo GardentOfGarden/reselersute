@@ -1,1521 +1,298 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark-red">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eclipse | Multi-App Management</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #ff2a2a;
-            --primary-dark: #cc0000;
-            --primary-light: #ff5c5c;
-            --secondary: #6c757d;
-            --success: #00e676;
-            --danger: #ff3d00;
-            --warning: #ffc400;
-            --info: #2979ff;
-            --dark: #0a0a0a;
-            --darker: #050505;
-            --light: #f8f9fa;
-            --background: #0f0f0f;
-            --card-bg: rgba(30, 30, 30, 0.95);
-            --text: #ffffff;
-            --text-muted: #a0a0a0;
-            --border: rgba(255, 255, 255, 0.08);
-            --sidebar-width: 280px;
-            --header-height: 70px;
-        }
-
-        [data-theme="dark-blue"] {
-            --primary: #2979ff;
-            --primary-dark: #2962ff;
-            --primary-light: #448aff;
-        }
-
-        [data-theme="dark-green"] {
-            --primary: #00e676;
-            --primary-dark: #00c853;
-            --primary-light: #69f0ae;
-        }
-
-        [data-theme="dark-purple"] {
-            --primary: #d500f9;
-            --primary-dark: #aa00ff;
-            --primary-light: #e040fb;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-
-        body {
-            background: var(--darker);
-            color: var(--text);
-            min-height: 100vh;
-            overflow-x: hidden;
-            line-height: 1.6;
-        }
-
-        .gradient-bg {
-            background: linear-gradient(135deg, var(--dark) 0%, var(--darker) 100%);
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
-        }
-
-        .gradient-bg::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
-            opacity: 0.02;
-            animation: rotate 30s linear infinite;
-        }
-
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .login-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            position: relative;
-        }
-
-        .login-box {
-            background: rgba(20, 20, 20, 0.95);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 50px 40px;
-            text-align: center;
-            width: 100%;
-            max-width: 440px;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            animation: slideUp 0.6s ease-out;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .logo {
-            margin-bottom: 30px;
-        }
-
-        .logo-icon {
-            font-size: 3.5rem;
-            color: var(--primary);
-            margin-bottom: 15px;
-            text-shadow: 0 0 20px var(--primary-light);
-            animation: glow 2s ease-in-out infinite alternate;
-        }
-
-        @keyframes glow {
-            from { text-shadow: 0 0 20px var(--primary-light); }
-            to { text-shadow: 0 0 30px var(--primary), 0 0 40px var(--primary-light); }
-        }
-
-        .logo h1 {
-            font-size: 2.8rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -0.5px;
-        }
-
-        .subtitle {
-            color: var(--text-muted);
-            margin-bottom: 35px;
-            font-size: 1.1rem;
-            font-weight: 300;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        .input-group input {
-            padding: 16px 20px;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text);
-            font-size: 15px;
-            transition: all 0.3s ease;
-        }
-
-        .input-group input::placeholder {
-            color: var(--text-muted);
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 0 3px rgba(255, 42, 42, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .btn {
-            padding: 16px 24px;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(255, 42, 42, 0.3);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid var(--border);
-            color: var(--text);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.12);
-            border-color: var(--primary);
-        }
-
-        .btn-small {
-            padding: 10px 16px;
-            font-size: 13px;
-        }
-
-        .btn-danger {
-            background: rgba(255, 61, 0, 0.15);
-            border: 1px solid rgba(255, 61, 0, 0.3);
-            color: #ff3d00;
-        }
-
-        .btn-danger:hover {
-            background: rgba(255, 61, 0, 0.25);
-        }
-
-        .main-panel {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .sidebar {
-            width: var(--sidebar-width);
-            background: rgba(25, 25, 25, 0.95);
-            border-right: 1px solid var(--border);
-            padding: 0;
-            backdrop-filter: blur(10px);
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 1000;
-        }
-
-        .sidebar-header {
-            padding: 25px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .sidebar-header-icon {
-            font-size: 2rem;
-            color: var(--primary);
-        }
-
-        .sidebar-header h2 {
-            font-size: 1.4rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .sidebar-nav {
-            padding: 20px 0;
-        }
-
-        .nav-section {
-            margin-bottom: 25px;
-        }
-
-        .nav-section h3 {
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-            padding: 0 25px;
-            font-weight: 600;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 14px 25px;
-            color: var(--text-muted);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            border-left: 3px solid transparent;
-            cursor: pointer;
-        }
-
-        .nav-item:hover {
-            background: rgba(255, 255, 255, 0.03);
-            color: var(--text);
-            border-left-color: var(--primary);
-        }
-
-        .nav-item.active {
-            background: rgba(255, 42, 42, 0.1);
-            color: var(--primary);
-            border-left-color: var(--primary);
-        }
-
-        .nav-item i {
-            width: 20px;
-            text-align: center;
-            font-size: 1.2rem;
-        }
-
-        .main-content {
-            flex: 1;
-            padding: 30px;
-            margin-left: var(--sidebar-width);
-            min-height: 100vh;
-        }
-
-        .content-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .content-header h1 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--text) 0%, var(--text-muted) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            border: 1px solid var(--border);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            margin-bottom: 35px;
-        }
-
-        .stat-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 25px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-            border-color: var(--primary);
-        }
-
-        .stat-icon {
-            width: 70px;
-            height: 70px;
-            border-radius: 16px;
-            background: rgba(255, 42, 42, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            color: var(--primary);
-        }
-
-        .stat-info h3 {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .stat-info span {
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: var(--text);
-        }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 30px;
-            animation: fadeIn 0.4s ease-out;
-            backdrop-filter: blur(10px);
-        }
-
-        .card h2 {
-            margin-bottom: 25px;
-            font-size: 1.5rem;
-            color: var(--text);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .card h2 i {
-            color: var(--primary);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        .generate-form {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .form-group label {
-            color: var(--text);
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .form-group select,
-        .form-group input {
-            padding: 12px 16px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text);
-            font-size: 14px;
-        }
-
-        .generated-key {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 25px;
-            margin-top: 25px;
-        }
-
-        .generated-key h4 {
-            margin-bottom: 15px;
-            color: var(--text-muted);
-            font-size: 1rem;
-        }
-
-        .generated-key code {
-            display: block;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 18px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-family: 'Courier New', monospace;
-            font-size: 1.1rem;
-            color: var(--primary);
-            border: 1px solid var(--border);
-            word-break: break-all;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: var(--card-bg);
-        }
-
-        th, td {
-            padding: 16px 20px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-        }
-
-        th {
-            background: rgba(0, 0, 0, 0.3);
-            font-weight: 600;
-            color: var(--text);
-            font-size: 0.9rem;
-        }
-
-        tr:hover {
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            display: inline-block;
-        }
-
-        .status-active {
-            background: rgba(0, 230, 118, 0.15);
-            color: #00e676;
-        }
-
-        .status-banned {
-            background: rgba(255, 61, 0, 0.15);
-            color: #ff3d00;
-        }
-
-        .status-expired {
-            background: rgba(255, 196, 0, 0.15);
-            color: #ffc400;
-        }
-
-        .key-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .section {
-            display: none;
-        }
-
-        .section.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            backdrop-filter: blur(10px);
-        }
-
-        .modal-content {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow: hidden;
-            animation: modalSlide 0.3s ease;
-        }
-
-        @keyframes modalSlide {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 25px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .modal-header h3 {
-            color: var(--text);
-            font-size: 1.3rem;
-        }
-
-        .close {
-            font-size: 1.5rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-
-        .close:hover {
-            color: var(--primary);
-        }
-
-        .modal-body {
-            padding: 25px;
-            max-height: calc(90vh - 100px);
-            overflow-y: auto;
-        }
-
-        .apps-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .app-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .app-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-        }
-
-        .app-card h3 {
-            color: var(--primary);
-            margin-bottom: 10px;
-        }
-
-        .app-card p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-        }
-
-        .app-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        @media (max-width: 1024px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
-            }
-            
-            .sidebar.open {
-                transform: translateX(0);
-            }
-            
-            .main-content {
-                margin-left: 0;
-                padding: 20px;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .generate-form {
-                grid-template-columns: 1fr;
-            }
-            
-            .card-header {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .apps-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <title>ECLIPSE | Admin Panel</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="gradient-bg"></div>
-    
-    <div id="loginScreen" class="login-container">
-        <div class="login-box">
-            <div class="logo">
-                <i class="fas fa-fire logo-icon"></i>
-                <h1>ECLIPSE</h1>
+    <div class="container">
+        <div id="loginBox" class="login-container">
+            <div class="login-box">
+                <div class="logo">
+                    <i class="fas fa-rocket"></i>
+                    <h1>ECLIPSE</h1>
+                </div>
+                <p class="subtitle">Multi-App Admin Panel</p>
+                <div class="input-group">
+                    <input type="password" id="adminPass" placeholder="Enter admin password">
+                    <button id="loginBtn" class="btn-primary">Login</button>
+                </div>
+                <p id="loginMsg"></p>
             </div>
-            <p class="subtitle">Multi-App Management System</p>
-            <div class="input-group">
-                <input type="password" id="passwordInput" placeholder="Enter admin password">
-                <button id="loginBtn" class="btn btn-primary">
-                    <i class="fas fa-sign-in-alt"></i>
-                    Access Dashboard
-                </button>
-            </div>
-            <p id="loginMessage"></p>
-        </div>
-    </div>
-
-    <div id="mainPanel" class="main-panel hidden">
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <i class="fas fa-fire sidebar-header-icon"></i>
-                <h2>ECLIPSE</h2>
-            </div>
-            <nav class="sidebar-nav">
-                <div class="nav-section">
-                    <h3>Dashboard</h3>
-                    <a href="#" class="nav-item active" data-section="dashboard">
-                        <i class="fas fa-chart-pie"></i>
-                        Overview
-                    </a>
-                    <a href="#" class="nav-item" data-section="apps">
-                        <i class="fas fa-cube"></i>
-                        Applications
-                    </a>
-                </div>
-                <div class="nav-section">
-                    <h3>License Management</h3>
-                    <a href="#" class="nav-item" data-section="keys">
-                        <i class="fas fa-key"></i>
-                        All Keys
-                    </a>
-                    <a href="#" class="nav-item" data-section="generate">
-                        <i class="fas fa-bolt"></i>
-                        Generate Key
-                    </a>
-                    <a href="#" class="nav-item" data-section="banned">
-                        <i class="fas fa-ban"></i>
-                        Banned Keys
-                    </a>
-                </div>
-                <div class="nav-section">
-                    <h3>Analytics</h3>
-                    <a href="#" class="nav-item" data-section="analytics">
-                        <i class="fas fa-chart-line"></i>
-                        Usage Analytics
-                    </a>
-                    <a href="#" class="nav-item" data-section="screenshots">
-                        <i class="fas fa-camera"></i>
-                        Screenshots
-                    </a>
-                </div>
-                <div class="nav-section">
-                    <h3>System</h3>
-                    <a href="#" class="nav-item" data-section="settings">
-                        <i class="fas fa-cog"></i>
-                        Settings
-                    </a>
-                    <a href="#" class="nav-item" onclick="logout()">
-                        <i class="fas fa-sign-out-alt"></i>
-                        Logout
-                    </a>
-                </div>
-            </nav>
         </div>
 
-        <div class="main-content">
-            <!-- Dashboard Section -->
-            <div id="dashboardSection" class="section active">
+        <div id="panelBox" class="main-panel hidden">
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <i class="fas fa-rocket"></i>
+                    <h2>ECLIPSE</h2>
+                </div>
+                <nav class="sidebar-nav">
+                    <div class="nav-section">
+                        <h3>Dashboard</h3>
+                        <a href="#" class="nav-item active" onclick="showSection('dashboard')"><i class="fas fa-home"></i> Dashboard</a>
+                        <a href="#" class="nav-item" onclick="showSection('apps')"><i class="fas fa-cube"></i> Applications</a>
+                        <a href="#" class="nav-item" onclick="showSection('keys')"><i class="fas fa-key"></i> License Keys</a>
+                        <a href="#" class="nav-item" onclick="showSection('stats')"><i class="fas fa-chart-pie"></i> Statistics</a>
+                    </div>
+                    <div class="nav-section">
+                        <h3>Management</h3>
+                        <a href="#" class="nav-item" onclick="showSection('banned')"><i class="fas fa-ban"></i> Banned Keys</a>
+                        <a href="#" class="nav-item" onclick="showSection('screenshots')"><i class="fas fa-camera"></i> Screenshots</a>
+                        <a href="#" class="nav-item" onclick="showSection('logs')"><i class="fas fa-history"></i> Activity Logs</a>
+                    </div>
+                    <div class="nav-section">
+                        <h3>Settings</h3>
+                        <a href="#" class="nav-item" onclick="showSection('settings')"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="#" class="nav-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </nav>
+            </div>
+
+            <div class="main-content">
                 <header class="content-header">
-                    <h1>Dashboard Overview</h1>
-                    <div class="user-info">
-                        <span>Administrator</span>
-                        <i class="fas fa-user-shield"></i>
+                    <h1 id="sectionTitle">Dashboard</h1>
+                    <div class="header-actions">
+                        <div class="user-info">
+                            <span>Admin</span>
+                            <i class="fas fa-user-shield"></i>
+                        </div>
                     </div>
                 </header>
 
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-cube"></i>
+                <div id="dashboardSection" class="section">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-cube"></i></div>
+                            <div class="stat-info"><h3>Total Apps</h3><span id="totalApps">0</span></div>
                         </div>
-                        <div class="stat-info">
-                            <h3>Active Applications</h3>
-                            <span id="totalApps">0</span>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-key"></i></div>
+                            <div class="stat-info"><h3>Total Keys</h3><span id="totalKeys">0</span></div>
                         </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-key"></i>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-info"><h3>Active Keys</h3><span id="activeKeys">0</span></div>
                         </div>
-                        <div class="stat-info">
-                            <h3>Total License Keys</h3>
-                            <span id="totalKeys">0</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Active Sessions</h3>
-                            <span id="activeKeys">0</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Total Logins</h3>
-                            <span id="totalLogins">0</span>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-ban"></i></div>
+                            <div class="stat-info"><h3>Banned Keys</h3><span id="bannedKeys">0</span></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card">
-                    <h2><i class="fas fa-rocket"></i> Quick Actions</h2>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                        <button class="btn btn-primary" onclick="showSection('generate')">
-                            <i class="fas fa-bolt"></i>
-                            Generate New Key
-                        </button>
-                        <button class="btn btn-secondary" onclick="showSection('apps')">
-                            <i class="fas fa-plus"></i>
-                            Add Application
-                        </button>
-                        <button class="btn btn-secondary" onclick="showSection('analytics')">
-                            <i class="fas fa-chart-bar"></i>
-                            View Analytics
-                        </button>
+                <div id="appsSection" class="section hidden">
+                    <div class="card">
+                        <h2><i class="fas fa-cube"></i> Manage Applications</h2>
+                        <div class="generate-form">
+                            <div class="input-group">
+                                <label for="appName">App Name:</label>
+                                <input type="text" id="appName" placeholder="Enter app name">
+                            </div>
+                            <div class="input-group">
+                                <label for="ownerId">Owner ID:</label>
+                                <input type="text" id="ownerId" placeholder="Enter owner ID">
+                            </div>
+                            <button id="createAppBtn" class="btn-primary"><i class="fas fa-plus"></i> Create App</button>
+                        </div>
+                        <div class="table-container">
+                            <table id="appsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>App ID</th>
+                                        <th>Owner ID</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <h2><i class="fas fa-clock"></i> Recent Activity</h2>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="text" id="searchInput" placeholder="Search keys..." style="padding: 10px 15px; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text);">
-                            <button class="btn btn-secondary btn-small" onclick="loadKeys()">
-                                <i class="fas fa-sync-alt"></i>
-                            </button>
+                <div id="keysSection" class="section hidden">
+                    <div class="card">
+                        <h2><i class="fas fa-key"></i> Generate Key</h2>
+                        <div class="generate-form">
+                            <div class="input-group">
+                                <label for="appSelect">Application:</label>
+                                <select id="appSelect"></select>
+                            </div>
+                            <div class="input-group">
+                                <label for="durationSelect">Duration:</label>
+                                <select id="durationSelect">
+                                    <option value="3600000">1 Hour</option>
+                                    <option value="86400000">1 Day</option>
+                                    <option value="604800000">1 Week</option>
+                                    <option value="2592000000">1 Month</option>
+                                    <option value="31536000000">1 Year</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="maxActivations">Max Activations:</label>
+                                <input type="number" id="maxActivations" min="1" value="1">
+                            </div>
+                            <div class="input-group">
+                                <label for="ownerIdKey">Owner ID:</label>
+                                <input type="text" id="ownerIdKey" placeholder="Enter owner ID">
+                            </div>
+                            <button id="generateKeyBtn" class="btn-primary"><i class="fas fa-plus"></i> Generate Key</button>
+                        </div>
+                        <div id="genMsg" class="generated-key hidden">
+                            <h4>Generated Key:</h4>
+                            <code id="generatedKeyText"></code>
+                            <button id="copyKeyBtn" class="btn-secondary"><i class="fas fa-copy"></i> Copy Key</button>
                         </div>
                     </div>
-                    <div class="table-container">
-                        <table id="keysTable">
-                            <thead>
-                                <tr>
-                                    <th>License Key</th>
-                                    <th>Application</th>
-                                    <th>Created</th>
-                                    <th>Expires</th>
-                                    <th>Activations</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-key"></i> All Keys</h2>
+                            <div class="header-actions">
+                                <input type="text" id="searchInput" placeholder="Search keys...">
+                                <button class="btn-secondary" onclick="loadKeys()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table id="keysTable">
+                                <thead>
+                                    <tr>
+                                        <th>Key</th>
+                                        <th>App</th>
+                                        <th>Owner ID</th>
+                                        <th>Created</th>
+                                        <th>Expires</th>
+                                        <th>HWID</th>
+                                        <th>Activations</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="statsSection" class="section hidden">
+                    <div class="card">
+                        <h2><i class="fas fa-chart-pie"></i> Statistics</h2>
+                        <div class="stats-charts">
+                            <div class="chart-container">
+                                <canvas id="keysChart"></canvas>
+                            </div>
+                            <div class="stats-details">
+                                <div class="stat-detail"><span class="stat-label">Total Keys:</span><span class="stat-value" id="statTotalKeys">0</span></div>
+                                <div class="stat-detail"><span class="stat-label">Active Sessions:</span><span class="stat-value" id="statActiveSessions">0</span></div>
+                                <div class="stat-detail"><span class="stat-label">Screenshots Captured:</span><span class="stat-value" id="statScreenshots">0</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="bannedSection" class="section hidden">
+                    <div class="card">
+                        <h2><i class="fas fa-ban"></i> Banned Keys</h2>
+                        <div class="table-container">
+                            <table id="bannedTable">
+                                <thead>
+                                    <tr>
+                                        <th>Key</th>
+                                        <th>App</th>
+                                        <th>Owner ID</th>
+                                        <th>Created</th>
+                                        <th>HWID</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="screenshotsSection" class="section hidden">
+                    <div class="card">
+                        <h2><i class="fas fa-camera"></i> Screenshots</h2>
+                        <div class="screenshots-controls">
+                            <input type="text" id="screenshotSearch" placeholder="Search by key or app...">
+                            <button class="btn-secondary" onclick="loadScreenshots()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                        </div>
+                        <div class="screenshots-grid" id="screenshotsGrid"></div>
+                    </div>
+                </div>
+
+                <div id="logsSection" class="section hidden">
+                    <div class="card">
+                        <h2><i class="fas fa-history"></i> Activity Logs</h2>
+                        <div class="table-container">
+                            <table id="logsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Key</th>
+                                        <th>App</th>
+                                        <th>Action</th>
+                                        <th>HWID</th>
+                                        <th>Timestamp</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="settingsSection" class="section hidden">
+                    <div class="card">
+                        <h2><i class="fas fa-cog"></i> Settings</h2>
+                        <div class="settings-form">
+                            <div class="setting-item">
+                                <label for="autoRefresh">Auto Refresh (seconds):</label>
+                                <input type="number" id="autoRefresh" min="0" value="30">
+                            </div>
+                            <div class="setting-item">
+                                <label for="theme">Theme:</label>
+                                <select id="theme">
+                                    <option value="dark-neon">Dark Neon</option>
+                                    <option value="dark-blue">Dark Blue</option>
+                                    <option value="dark-green">Dark Green</option>
+                                    <option value="dark-purple">Dark Purple</option>
+                                </select>
+                            </div>
+                            <div class="setting-item">
+                                <label for="notifyExpiring">Notify Expiring Keys:</label>
+                                <input type="checkbox" id="notifyExpiring">
+                            </div>
+                            <button class="btn-primary" onclick="saveSettings()"><i class="fas fa-save"></i> Save Settings</button>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Applications Section -->
-            <div id="appsSection" class="section">
-                <header class="content-header">
-                    <h1>Application Management</h1>
-                    <button class="btn btn-primary" onclick="showAddAppModal()">
-                        <i class="fas fa-plus"></i>
-                        Add Application
-                    </button>
-                </header>
-
-                <div class="card">
-                    <h2><i class="fas fa-cube"></i> Your Applications</h2>
-                    <div class="apps-grid" id="appsGrid">
-                        <!-- Apps will be loaded here -->
+        <div id="screenshotModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Screenshot Preview</h3>
+                    <span class="close" onclick="closeModal('screenshotModal')">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <img id="screenshotImage" src="" alt="Screenshot">
+                    <div class="screenshot-info">
+                        <p>Key: <span id="screenshotKey"></span></p>
+                        <p>App: <span id="screenshotApp"></span></p>
+                        <p>Timestamp: <span id="screenshotTimestamp"></span></p>
                     </div>
-                </div>
-            </div>
-
-            <!-- Generate Key Section -->
-            <div id="generateSection" class="section">
-                <header class="content-header">
-                    <h1>Generate License Key</h1>
-                </header>
-
-                <div class="card">
-                    <h2><i class="fas fa-bolt"></i> Key Generator</h2>
-                    <div class="generate-form">
-                        <div class="form-group">
-                            <label for="appSelect">Application:</label>
-                            <select id="appSelect" class="form-control">
-                                <option value="">Select Application</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="durationSelect">Duration:</label>
-                            <select id="durationSelect" class="form-control">
-                                <option value="3600000">1 Hour</option>
-                                <option value="86400000">1 Day</option>
-                                <option value="604800000">1 Week</option>
-                                <option value="2592000000" selected>1 Month</option>
-                                <option value="7776000000">3 Months</option>
-                                <option value="15552000000">6 Months</option>
-                                <option value="31536000000">1 Year</option>
-                                <option value="0">Lifetime</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="maxActivations">Max Activations:</label>
-                            <input type="number" id="maxActivations" value="1" min="1" max="10" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label for="keyNotes">Notes (optional):</label>
-                            <input type="text" id="keyNotes" placeholder="Add description..." class="form-control">
-                        </div>
-                    </div>
-                    <button class="btn btn-primary" onclick="generateKey()">
-                        <i class="fas fa-bolt"></i>
-                        Generate License Key
-                    </button>
-
-                    <div id="generatedKeyContainer" class="generated-key hidden">
-                        <h4>Generated License Key:</h4>
-                        <code id="generatedKey"></code>
-                        <button class="btn btn-secondary" onclick="copyKey()">
-                            <i class="fas fa-copy"></i>
-                            Copy to Clipboard
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- All Keys Section -->
-            <div id="keysSection" class="section">
-                <header class="content-header">
-                    <h1>All License Keys</h1>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="keysSearch" placeholder="Search keys..." style="padding: 10px 15px; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text);">
-                        <button class="btn btn-secondary" onclick="loadAllKeys()">
-                            <i class="fas fa-sync-alt"></i>
-                            Refresh
-                        </button>
-                    </div>
-                </header>
-
-                <div class="card">
-                    <div class="table-container">
-                        <table id="allKeysTable">
-                            <thead>
-                                <tr>
-                                    <th>License Key</th>
-                                    <th>Application</th>
-                                    <th>Created</th>
-                                    <th>Expires</th>
-                                    <th>Activations</th>
-                                    <th>HWID</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Add more sections for Banned Keys, Analytics, Screenshots, Settings -->
-            <div id="bannedSection" class="section">
-                <header class="content-header">
-                    <h1>Banned License Keys</h1>
-                </header>
-                <div class="card">
-                    <p>Banned keys management will be implemented here.</p>
-                </div>
-            </div>
-
-            <div id="analyticsSection" class="section">
-                <header class="content-header">
-                    <h1>Usage Analytics</h1>
-                </header>
-                <div class="card">
-                    <p>Analytics dashboard will be implemented here.</p>
-                </div>
-            </div>
-
-            <div id="screenshotsSection" class="section">
-                <header class="content-header">
-                    <h1>Screenshots</h1>
-                </header>
-                <div class="card">
-                    <p>Screenshots management will be implemented here.</p>
-                </div>
-            </div>
-
-            <div id="settingsSection" class="section">
-                <header class="content-header">
-                    <h1>System Settings</h1>
-                </header>
-                <div class="card">
-                    <p>System settings will be implemented here.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Add Application Modal -->
-    <div id="addAppModal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Add New Application</h3>
-                <span class="close" onclick="closeModal('addAppModal')">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="appName">Application Name:</label>
-                    <input type="text" id="appName" class="form-control" placeholder="Enter application name">
-                </div>
-                <div class="form-group">
-                    <label for="appOwner">Owner ID:</label>
-                    <input type="text" id="appOwner" class="form-control" placeholder="Enter owner ID">
-                </div>
-                <div class="form-group">
-                    <label for="appVersion">Version:</label>
-                    <input type="text" id="appVersion" class="form-control" placeholder="Enter version">
-                </div>
-                <button class="btn btn-primary" onclick="addApplication()" style="width: 100%; margin-top: 20px;">
-                    <i class="fas fa-plus"></i>
-                    Add Application
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let currentUser = null;
-        let authToken = null;
-        let allKeys = [];
-        let allApps = [];
-
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-        });
-
-        function initializeApp() {
-            bindEvents();
-            checkAuth();
-        }
-
-        function bindEvents() {
-            document.getElementById('loginBtn').addEventListener('click', login);
-            document.getElementById('passwordInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') login();
-            });
-
-            // Search functionality
-            document.getElementById('searchInput')?.addEventListener('input', filterKeys);
-            document.getElementById('keysSearch')?.addEventListener('input', filterAllKeys);
-        }
-
-        async function login() {
-            const password = document.getElementById('passwordInput').value;
-            const message = document.getElementById('loginMessage');
-
-            if (!password) {
-                message.textContent = 'Please enter administrator password';
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    currentUser = data.user;
-                    authToken = data.token;
-                    localStorage.setItem('eclipse_auth', JSON.stringify({ user: data.user, token: data.token }));
-                    
-                    document.getElementById('loginScreen').classList.add('hidden');
-                    document.getElementById('mainPanel').classList.remove('hidden');
-                    
-                    loadDashboard();
-                } else {
-                    message.textContent = data.message || 'Authentication failed';
-                }
-            } catch (error) {
-                message.textContent = 'Connection error. Please try again.';
-            }
-        }
-
-        function checkAuth() {
-            const savedAuth = localStorage.getItem('eclipse_auth');
-            if (savedAuth) {
-                const authData = JSON.parse(savedAuth);
-                currentUser = authData.user;
-                authToken = authData.token;
-                
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('mainPanel').classList.remove('hidden');
-                loadDashboard();
-            }
-        }
-
-        async function loadDashboard() {
-            await loadStatistics();
-            await loadKeys();
-            await loadApps();
-            populateAppSelect();
-        }
-
-        async function loadStatistics() {
-            try {
-                const response = await fetch('/api/statistics');
-                const stats = await response.json();
-                
-                document.getElementById('totalApps').textContent = stats.totalApps;
-                document.getElementById('totalKeys').textContent = stats.totalKeys;
-                document.getElementById('activeKeys').textContent = stats.activeKeys;
-                document.getElementById('totalLogins').textContent = stats.totalLogins;
-            } catch (error) {
-                console.error('Failed to load statistics:', error);
-            }
-        }
-
-        async function loadKeys() {
-            try {
-                const response = await fetch('/api/keys');
-                allKeys = await response.json();
-                displayRecentKeys(allKeys);
-            } catch (error) {
-                console.error('Failed to load keys:', error);
-            }
-        }
-
-        async function loadAllKeys() {
-            try {
-                const response = await fetch('/api/keys');
-                allKeys = await response.json();
-                displayAllKeys(allKeys);
-            } catch (error) {
-                console.error('Failed to load keys:', error);
-            }
-        }
-
-        async function loadApps() {
-            try {
-                const response = await fetch('/api/apps');
-                allApps = await response.json();
-                displayApps(allApps);
-            } catch (error) {
-                console.error('Failed to load apps:', error);
-            }
-        }
-
-        function displayRecentKeys(keys) {
-            const tbody = document.querySelector('#keysTable tbody');
-            if (!tbody) return;
-            
-            tbody.innerHTML = '';
-
-            const recentKeys = keys.slice(-10).reverse();
-
-            recentKeys.forEach(key => {
-                const app = allApps.find(a => a.id === key.appId) || { name: 'Unknown' };
-                const statusClass = key.banned ? 'status-banned' : 
-                                  key.expiresAt && new Date(key.expiresAt) < new Date() ? 'status-expired' : 'status-active';
-                const statusText = key.banned ? 'Banned' : 
-                                 key.expiresAt && new Date(key.expiresAt) < new Date() ? 'Expired' : 'Active';
-
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td><code>${key.value}</code></td>
-                    <td>${app.name}</td>
-                    <td>${new Date(key.createdAt).toLocaleDateString()}</td>
-                    <td>${key.expiresAt ? new Date(key.expiresAt).toLocaleDateString() : 'Never'}</td>
-                    <td>${key.activations}/${key.maxActivations}</td>
-                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                    <td>
-                        <div class="key-actions">
-                            ${!key.banned ? `
-                            <button class="btn btn-secondary btn-small" onclick="banKey('${key.id}')">
-                                <i class="fas fa-ban"></i>
-                            </button>
-                            ` : `
-                            <button class="btn btn-secondary btn-small" onclick="unbanKey('${key.id}')">
-                                <i class="fas fa-check"></i>
-                            </button>
-                            `}
-                            <button class="btn btn-danger btn-small" onclick="deleteKey('${key.id}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        function displayAllKeys(keys) {
-            const tbody = document.querySelector('#allKeysTable tbody');
-            if (!tbody) return;
-            
-            tbody.innerHTML = '';
-
-            keys.forEach(key => {
-                const app = allApps.find(a => a.id === key.appId) || { name: 'Unknown' };
-                const statusClass = key.banned ? 'status-banned' : 
-                                  key.expiresAt && new Date(key.expiresAt) < new Date() ? 'status-expired' : 'status-active';
-                const statusText = key.banned ? 'Banned' : 
-                                 key.expiresAt && new Date(key.expiresAt) < new Date() ? 'Expired' : 'Active';
-
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td><code>${key.value}</code></td>
-                    <td>${app.name}</td>
-                    <td>${new Date(key.createdAt).toLocaleDateString()}</td>
-                    <td>${key.expiresAt ? new Date(key.expiresAt).toLocaleDateString() : 'Never'}</td>
-                    <td>${key.activations}/${key.maxActivations}</td>
-                    <td>${key.hwid ? key.hwid.substring(0, 8) + '...' : 'Not set'}</td>
-                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                    <td>
-                        <div class="key-actions">
-                            ${!key.banned ? `
-                            <button class="btn btn-secondary btn-small" onclick="banKey('${key.id}')">
-                                <i class="fas fa-ban"></i>
-                            </button>
-                            ` : `
-                            <button class="btn btn-secondary btn-small" onclick="unbanKey('${key.id}')">
-                                <i class="fas fa-check"></i>
-                            </button>
-                            `}
-                            <button class="btn btn-danger btn-small" onclick="deleteKey('${key.id}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        function displayApps(apps) {
-            const appsGrid = document.getElementById('appsGrid');
-            if (!appsGrid) return;
-            
-            appsGrid.innerHTML = '';
-
-            apps.forEach(app => {
-                const appCard = document.createElement('div');
-                appCard.className = 'app-card';
-                appCard.innerHTML = `
-                    <h3>${app.name}</h3>
-                    <p><strong>Version:</strong> ${app.version}</p>
-                    <p><strong>Owner:</strong> ${app.owner}</p>
-                    <p><strong>Status:</strong> <span class="status-badge status-active">${app.status}</span></p>
-                    <div class="app-actions">
-                        <button class="btn btn-secondary btn-small" onclick="editApp('${app.id}')">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <button class="btn btn-danger btn-small" onclick="deleteApp('${app.id}')">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                    </div>
-                `;
-                appsGrid.appendChild(appCard);
-            });
-        }
-
-        function populateAppSelect() {
-            const appSelect = document.getElementById('appSelect');
-            if (!appSelect) return;
-            
-            appSelect.innerHTML = '<option value="">Select Application</option>';
-            allApps.forEach(app => {
-                const option = document.createElement('option');
-                option.value = app.id;
-                option.textContent = `${app.name} v${app.version}`;
-                appSelect.appendChild(option);
-            });
-        }
-
-        function showSection(sectionName) {
-            // Hide all sections
-            document.querySelectorAll('.section').forEach(section => {
-                section.classList.remove('active');
-            });
-            
-            // Remove active class from all nav items
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // Show selected section
-            const targetSection = document.getElementById(sectionName + 'Section');
-            if (targetSection) {
-                targetSection.classList.add('active');
-            }
-            
-            // Set active nav item
-            const activeNav = document.querySelector(`[data-section="${sectionName}"]`);
-            if (activeNav) {
-                activeNav.classList.add('active');
-            }
-            
-            // Update page title
-            const titleMap = {
-                dashboard: 'Dashboard Overview',
-                apps: 'Application Management',
-                generate: 'Generate License Key',
-                keys: 'All License Keys',
-                banned: 'Banned Keys',
-                analytics: 'Usage Analytics',
-                screenshots: 'Screenshots',
-                settings: 'System Settings'
-            };
-            
-            const contentHeader = document.querySelector('.content-header h1');
-            if (contentHeader && titleMap[sectionName]) {
-                contentHeader.textContent = titleMap[sectionName];
-            }
-            
-            // Load section-specific data
-            switch(sectionName) {
-                case 'keys':
-                    loadAllKeys();
-                    break;
-                case 'apps':
-                    loadApps();
-                    break;
-                case 'analytics':
-                    loadAnalytics();
-                    break;
-            }
-        }
-
-        function showAddAppModal() {
-            document.getElementById('addAppModal').classList.remove('hidden');
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.add('hidden');
-        }
-
-        async function addApplication() {
-            const name = document.getElementById('appName').value;
-            const owner = document.getElementById('appOwner').value;
-            const version = document.getElementById('appVersion').value;
-
-            if (!name || !owner || !version) {
-                alert('Please fill in all fields');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/apps', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, owner, version })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    closeModal('addAppModal');
-                    await loadApps();
-                    populateAppSelect();
-                    await loadStatistics();
-                } else {
-                    alert('Failed to add application');
-                }
-            } catch (error) {
-                alert('Failed to add application');
-            }
-        }
-
-        async function generateKey() {
-            const appId = document.getElementById('appSelect').value;
-            const durationMs = parseInt(document.getElementById('durationSelect').value);
-            const maxActivations = parseInt(document.getElementById('maxActivations').value);
-            const notes = document.getElementById('keyNotes').value;
-
-            if (!appId) {
-                alert('Please select an application');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/keys', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ appId, durationMs, maxActivations, notes })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    const keyContainer = document.getElementById('generatedKeyContainer');
-                    const keyElement = document.getElementById('generatedKey');
-                    
-                    keyElement.textContent = data.key.value;
-                    keyContainer.classList.remove('hidden');
-                    
-                    await loadKeys();
-                    await loadStatistics();
-                } else {
-                    alert('Failed to generate key');
-                }
-            } catch (error) {
-                alert('Failed to generate key');
-            }
-        }
-
-        function copyKey() {
-            const keyElement = document.getElementById('generatedKey');
-            navigator.clipboard.writeText(keyElement.textContent).then(() => {
-                alert('Key copied to clipboard!');
-            });
-        }
-
-        async function banKey(keyId) {
-            if (!confirm('Are you sure you want to ban this key?')) return;
-
-            try {
-                const response = await fetch(`/api/keys/${keyId}/ban`, { method: 'POST' });
-                if (response.ok) {
-                    loadKeys();
-                    loadAllKeys();
-                    loadStatistics();
-                }
-            } catch (error) {
-                alert('Failed to ban key');
-            }
-        }
-
-        async function unbanKey(keyId) {
-            if (!confirm('Are you sure you want to unban this key?')) return;
-
-            try {
-                const response = await fetch(`/api/keys/${keyId}/unban`, { method: 'POST' });
-                if (response.ok) {
-                    loadKeys();
-                    loadAllKeys();
-                    loadStatistics();
-                }
-            } catch (error) {
-                alert('Failed to unban key');
-            }
-        }
-
-        async function deleteKey(keyId) {
-            if (!confirm('Are you sure you want to permanently delete this key?')) return;
-
-            try {
-                const response = await fetch(`/api/keys/${keyId}`, { method: 'DELETE' });
-                if (response.ok) {
-                    loadKeys();
-                    loadAllKeys();
-                    loadStatistics();
-                }
-            } catch (error) {
-                alert('Failed to delete key');
-            }
-        }
-
-        function filterKeys() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const filteredKeys = allKeys.filter(key => 
-                key.value.toLowerCase().includes(searchTerm) ||
-                (key.hwid && key.hwid.toLowerCase().includes(searchTerm))
-            );
-            displayRecentKeys(filteredKeys);
-        }
-
-        function filterAllKeys() {
-            const searchTerm = document.getElementById('keysSearch').value.toLowerCase();
-            const filteredKeys = allKeys.filter(key => 
-                key.value.toLowerCase().includes(searchTerm) ||
-                (key.hwid && key.hwid.toLowerCase().includes(searchTerm))
-            );
-            displayAllKeys(filteredKeys);
-        }
-
-        function loadAnalytics() {
-            console.log('Loading analytics...');
-            // Analytics functionality will be implemented here
-        }
-
-        function logout() {
-            localStorage.removeItem('eclipse_auth');
-            window.location.reload();
-        }
-
-        // Initialize navigation
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', function(e) {
-                e.preventDefault();
-                const section = this.getAttribute('data-section');
-                if (section) {
-                    showSection(section);
-                }
-            });
-        });
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="admin.js"></script>
 </body>
 </html>
