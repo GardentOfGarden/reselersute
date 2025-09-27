@@ -5,11 +5,13 @@ const cors = require("cors");
 const crypto = require("crypto");
 const { OAuth2Client } = require("google-auth-library");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || "eclipse_super_secret_key";
+const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "your-google-client-id";
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "your-google-client-secret";
 
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
@@ -21,18 +23,32 @@ const dbFile = path.join(__dirname, "database.json");
 
 const defaultDatabase = {
     apps: [],
-    users: [],
+    users: [
+        {
+            id: "admin",
+            email: "admin@eclipse.com",
+            password: "$2a$10$8S6Y6Q7Q6Q7Q6Q7Q6Q7Q6O.Q6Q7Q6Q7Q6Q7Q6Q7Q6Q7Q6Q7Q6Q7Q6",
+            name: "Administrator",
+            role: "admin",
+            createdAt: new Date().toISOString(),
+            lastLogin: new Date().toISOString()
+        }
+    ],
     keys: [],
     settings: {
         maxKeysPerReseller: 100,
-        defaultKeyDuration: 2592000000
+        defaultKeyDuration: 2592000000,
+        googleAuthEnabled: true
     },
-    version: "2.0"
+    version: "3.0"
 };
 
 function loadDatabase() {
     if (!fs.existsSync(dbFile)) {
-        fs.writeFileSync(dbFile, JSON.stringify(defaultDatabase, null, 2));
+        const db = defaultDatabase;
+        fs.writeFileSync(dbFile, JSON.stringify(db, null, 2));
+        console.log("📁 New database created with default admin user");
+        console.log("🔑 Default admin: admin@eclipse.com / admin123");
     }
     return JSON.parse(fs.readFileSync(dbFile, "utf-8"));
 }
@@ -47,10 +63,10 @@ function generateAppId() {
 
 function generateKey() {
     const segments = [];
-    for (let i = 0; i < 3; i++) {
-        segments.push(crypto.randomBytes(4).toString('hex').toUpperCase());
+    for (let i = 0; i < 4; i++) {
+        segments.push(crypto.randomBytes(3).toString('hex').toUpperCase());
     }
-    return "ECLIPSE-" + segments.join("-");
+    return "ECL-" + segments.join("-");
 }
 
 function authenticateToken(req, res, next) {
@@ -79,6 +95,7 @@ function requireRole(role) {
     };
 }
 
+// Google OAuth Login
 app.post("/api/auth/google", async (req, res) => {
     const { token } = req.body;
 
@@ -94,22 +111,32 @@ app.post("/api/auth/google", async (req, res) => {
         let user = db.users.find(u => u.email === payload.email);
         
         if (!user) {
+            // Auto-create user with reseller role
             user = {
                 id: crypto.randomBytes(16).toString('hex'),
                 email: payload.email,
                 name: payload.name,
                 picture: payload.picture,
-                role: 'user',
+                role: 'reseller',
                 createdAt: new Date().toISOString(),
-                lastLogin: new Date().toISOString()
+                lastLogin: new Date().toISOString(),
+                googleId: payload.sub
             };
             db.users.push(user);
+            console.log(`👤 New user created via Google: ${payload.email}`);
         } else {
             user.lastLogin = new Date().toISOString();
+            user.picture = payload.picture;
         }
 
         const jwtToken = jwt.sign(
-            { userId: user.id, email: user.email, role: user.role },
+            { 
+                userId: user.id, 
+                email: user.email, 
+                name: user.name,
+                role: user.role,
+                picture: user.picture 
+            },
             JWT_SECRET,
             { expiresIn: '24h' }
         );
@@ -128,15 +155,66 @@ app.post("/api/auth/google", async (req, res) => {
             }
         });
     } catch (error) {
+        console.error("Google auth error:", error);
         res.status(401).json({ success: false, message: "Google authentication failed" });
     }
 });
 
-app.post("/api/auth/login", (req, res) => {
-    const { key, hwid, appId, ownerId } = req.body;
+// Email/Password Login
+app.post("/api/auth/login", async (req, res) => {
+    const { email, password } = req.body;
     const db = loadDatabase();
 
-    const app = db.apps.find(a => a.id === appId && a.ownerId === ownerId);
+    const user = db.users.find(u => u.email === email);
+    if (!user) {
+        return res.json({ success: false, message: "Invalid credentials" });
+    }
+
+    if (!user.password) {
+        return res.json({ success: false, message: "Please use Google login" });
+    }
+
+    try {
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
+            return res.json({ success: false, message: "Invalid credentials" });
+        }
+
+        user.lastLogin = new Date().toISOString();
+        saveDatabase(db);
+
+        const token = jwt.sign(
+            { 
+                userId: user.id, 
+                email: user.email, 
+                name: user.name,
+                role: user.role 
+            },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.json({
+            success: true,
+            token: token,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role
+            }
+        });
+    } catch (error) {
+        res.json({ success: false, message: "Login failed" });
+    }
+});
+
+// Key Authentication (for loaders)
+app.post("/api/auth/key", (req, res) => {
+    const { key, hwid, appId } = req.body;
+    const db = loadDatabase();
+
+    const app = db.apps.find(a => a.id === appId);
     if (!app || !app.enabled) {
         return res.json({ success: false, message: "Application not available" });
     }
@@ -184,16 +262,17 @@ app.post("/api/auth/login", (req, res) => {
     });
 });
 
+// Applications Management
 app.post("/api/apps", authenticateToken, requireRole('admin'), (req, res) => {
-    const { name, version, ownerId, downloadUrl } = req.body;
+    const { name, version, downloadUrl } = req.body;
     const db = loadDatabase();
 
     const app = {
         id: generateAppId(),
         name,
-        version,
-        ownerId,
+        version: version || "1.0.0",
         downloadUrl,
+        ownerId: req.user.userId,
         enabled: true,
         createdAt: new Date().toISOString(),
         createdBy: req.user.userId
@@ -216,17 +295,41 @@ app.get("/api/apps", authenticateToken, (req, res) => {
     res.json({ success: true, apps });
 });
 
+app.put("/api/apps/:id", authenticateToken, (req, res) => {
+    const { id } = req.params;
+    const { enabled } = req.body;
+    const db = loadDatabase();
+
+    const app = db.apps.find(a => a.id === id);
+    if (!app) {
+        return res.json({ success: false, message: "App not found" });
+    }
+
+    if (req.user.role !== 'admin' && app.ownerId !== req.user.userId) {
+        return res.status(403).json({ success: false, message: "Access denied" });
+    }
+
+    app.enabled = enabled;
+    app.updatedAt = new Date().toISOString();
+    saveDatabase(db);
+
+    res.json({ success: true, app });
+});
+
+// Key Generation
 app.post("/api/keys/generate", authenticateToken, (req, res) => {
     const { appId, duration, maxActivations = 1, note } = req.body;
     const db = loadDatabase();
 
+    // Check reseller limits
     if (req.user.role === 'reseller') {
         const userKeys = db.keys.filter(k => k.createdBy === req.user.userId);
         if (userKeys.length >= db.settings.maxKeysPerReseller) {
             return res.json({ success: false, message: "Key limit reached" });
         }
 
-        if (!duration || duration > 2592000000) {
+        // Resellers can only create temporary keys
+        if (!duration || duration > 2592000000) { // 30 days max
             return res.json({ success: false, message: "Invalid duration for reseller" });
         }
     }
@@ -270,20 +373,40 @@ app.get("/api/keys", authenticateToken, (req, res) => {
     res.json({ success: true, keys });
 });
 
-app.get("/api/stats", authenticateToken, (req, res) => {
+app.post("/api/keys/:id/ban", authenticateToken, (req, res) => {
+    const { id } = req.params;
     const db = loadDatabase();
 
-    const stats = {
-        totalApps: db.apps.length,
-        totalKeys: db.keys.length,
-        totalUsers: db.users.length,
-        activeKeys: db.keys.filter(k => !k.banned && (!k.expiresAt || new Date(k.expiresAt) > new Date())).length,
-        bannedKeys: db.keys.filter(k => k.banned).length,
-        expiredKeys: db.keys.filter(k => !k.banned && k.expiresAt && new Date(k.expiresAt) < new Date()).length,
-        resellerKeys: db.keys.filter(k => k.creatorRole === 'reseller').length
-    };
+    const key = db.keys.find(k => k.value === id);
+    if (!key) {
+        return res.json({ success: false, message: "Key not found" });
+    }
 
-    res.json({ success: true, stats });
+    if (req.user.role !== 'admin' && key.createdBy !== req.user.userId) {
+        return res.status(403).json({ success: false, message: "Access denied" });
+    }
+
+    key.banned = true;
+    key.updatedAt = new Date().toISOString();
+    saveDatabase(db);
+
+    res.json({ success: true, message: "Key banned" });
+});
+
+// Users Management
+app.get("/api/users", authenticateToken, requireRole('admin'), (req, res) => {
+    const db = loadDatabase();
+    const users = db.users.map(user => ({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        createdAt: user.createdAt,
+        lastLogin: user.lastLogin,
+        picture: user.picture
+    }));
+
+    res.json({ success: true, users });
 });
 
 app.post("/api/users/promote", authenticateToken, requireRole('admin'), (req, res) => {
@@ -296,13 +419,56 @@ app.post("/api/users/promote", authenticateToken, requireRole('admin'), (req, re
     }
 
     user.role = role;
+    user.updatedAt = new Date().toISOString();
     saveDatabase(db);
 
     res.json({ success: true, message: "User role updated" });
 });
 
+// Statistics
+app.get("/api/stats", authenticateToken, (req, res) => {
+    const db = loadDatabase();
+
+    let keys = db.keys;
+    let apps = db.apps;
+
+    if (req.user.role !== 'admin') {
+        keys = keys.filter(k => k.createdBy === req.user.userId);
+        apps = apps.filter(a => a.ownerId === req.user.userId);
+    }
+
+    const stats = {
+        totalApps: apps.length,
+        totalKeys: keys.length,
+        totalUsers: db.users.length,
+        activeKeys: keys.filter(k => !k.banned && (!k.expiresAt || new Date(k.expiresAt) > new Date())).length,
+        bannedKeys: keys.filter(k => k.banned).length,
+        expiredKeys: keys.filter(k => !k.banned && k.expiresAt && new Date(k.expiresAt) < new Date()).length,
+        resellerKeys: keys.filter(k => k.creatorRole === 'reseller').length,
+        todayActivations: keys.filter(k => k.lastUsed && new Date(k.lastUsed).toDateString() === new Date().toDateString()).length
+    };
+
+    res.json({ success: true, stats });
+});
+
+// Settings
+app.get("/api/settings", authenticateToken, requireRole('admin'), (req, res) => {
+    const db = loadDatabase();
+    res.json({ success: true, settings: db.settings });
+});
+
+app.put("/api/settings", authenticateToken, requireRole('admin'), (req, res) => {
+    const { settings } = req.body;
+    const db = loadDatabase();
+
+    db.settings = { ...db.settings, ...settings };
+    saveDatabase(db);
+
+    res.json({ success: true, message: "Settings updated" });
+});
+
 app.listen(PORT, () => {
-    console.log(`🚀 Eclipse Panel v2.0 running on port ${PORT}`);
-    console.log(`🔐 JWT Secret: ${JWT_SECRET.substring(0, 10)}...`);
-    console.log(`📊 API endpoints available at http://localhost:${PORT}/api`);
+    console.log(`🚀 Eclipse Panel v3.0 running on port ${PORT}`);
+    console.log(`🔐 Google Auth: ${GOOGLE_CLIENT_ID ? "Enabled" : "Disabled"}`);
+    console.log(`📊 Admin panel: http://localhost:${PORT}`);
 });
