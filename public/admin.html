@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECLIPSE | Admin Panel</title>
+    <title>KeyAuth | Admin Panel</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
@@ -12,10 +12,10 @@
         <div id="loginBox" class="login-container">
             <div class="login-box">
                 <div class="logo">
-                    <i class="fas fa-rocket"></i>
-                    <h1>ECLIPSE</h1>
+                    <i class="fas fa-key"></i>
+                    <h1>KeyAuth</h1>
                 </div>
-                <p class="subtitle">Multi-App Admin Panel</p>
+                <p class="subtitle">Admin Panel</p>
                 <div class="input-group">
                     <input type="password" id="adminPass" placeholder="Enter admin password">
                     <button id="loginBtn" class="btn-primary">Login</button>
@@ -27,39 +27,24 @@
         <div id="panelBox" class="main-panel hidden">
             <div class="sidebar">
                 <div class="sidebar-header">
-                    <i class="fas fa-rocket"></i>
-                    <h2>ECLIPSE</h2>
+                    <i class="fas fa-key"></i>
+                    <h2>KeyAuth</h2>
                 </div>
                 <nav class="sidebar-nav">
-                    <div class="nav-section">
-                        <h3>Dashboard</h3>
-                        <a href="#" class="nav-item active" onclick="showSection('dashboard')"><i class="fas fa-home"></i> Dashboard</a>
-                        <a href="#" class="nav-item" onclick="showSection('apps')"><i class="fas fa-cube"></i> Applications</a>
-                        <a href="#" class="nav-item" onclick="showSection('keys')"><i class="fas fa-key"></i> License Keys</a>
-                        <a href="#" class="nav-item" onclick="showSection('stats')"><i class="fas fa-chart-pie"></i> Statistics</a>
-                    </div>
-                    <div class="nav-section">
-                        <h3>Management</h3>
-                        <a href="#" class="nav-item" onclick="showSection('banned')"><i class="fas fa-ban"></i> Banned Keys</a>
-                        <a href="#" class="nav-item" onclick="showSection('screenshots')"><i class="fas fa-camera"></i> Screenshots</a>
-                        <a href="#" class="nav-item" onclick="showSection('logs')"><i class="fas fa-history"></i> Activity Logs</a>
-                    </div>
-                    <div class="nav-section">
-                        <h3>Settings</h3>
-                        <a href="#" class="nav-item" onclick="showSection('settings')"><i class="fas fa-cog"></i> Settings</a>
-                        <a href="#" class="nav-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                    </div>
+                    <a href="#" class="nav-item active" onclick="showSection('dashboard')"><i class="fas fa-home"></i> Dashboard</a>
+                    <a href="#" class="nav-item" onclick="showSection('apps')"><i class="fas fa-cube"></i> Applications</a>
+                    <a href="#" class="nav-item" onclick="showSection('keys')"><i class="fas fa-key"></i> License Keys</a>
+                    <a href="#" class="nav-item" onclick="showSection('stats')"><i class="fas fa-chart-pie"></i> Statistics</a>
+                    <a href="#" class="nav-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </nav>
             </div>
 
             <div class="main-content">
                 <header class="content-header">
                     <h1 id="sectionTitle">Dashboard</h1>
-                    <div class="header-actions">
-                        <div class="user-info">
-                            <span>Admin</span>
-                            <i class="fas fa-user-shield"></i>
-                        </div>
+                    <div class="user-info">
+                        <span>Admin</span>
+                        <i class="fas fa-user-shield"></i>
                     </div>
                 </header>
 
@@ -96,6 +81,10 @@
                                 <label for="ownerId">Owner ID:</label>
                                 <input type="text" id="ownerId" placeholder="Enter owner ID">
                             </div>
+                            <div class="input-group">
+                                <label for="dllUrl">DLL URL:</label>
+                                <input type="text" id="dllUrl" placeholder="Enter DLL URL">
+                            </div>
                             <button id="createAppBtn" class="btn-primary"><i class="fas fa-plus"></i> Create App</button>
                         </div>
                         <div class="table-container">
@@ -105,8 +94,8 @@
                                         <th>Name</th>
                                         <th>App ID</th>
                                         <th>Owner ID</th>
+                                        <th>DLL URL</th>
                                         <th>Created</th>
-                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -120,8 +109,8 @@
                         <h2><i class="fas fa-key"></i> Generate Key</h2>
                         <div class="generate-form">
                             <div class="input-group">
-                                <label for="appSelect">Application:</label>
-                                <select id="appSelect"></select>
+                                <label for="appSelect">Applications:</label>
+                                <select id="appSelect" multiple></select>
                             </div>
                             <div class="input-group">
                                 <label for="durationSelect">Duration:</label>
@@ -162,7 +151,7 @@
                                 <thead>
                                     <tr>
                                         <th>Key</th>
-                                        <th>App</th>
+                                        <th>Apps</th>
                                         <th>Owner ID</th>
                                         <th>Created</th>
                                         <th>Expires</th>
@@ -187,105 +176,10 @@
                             </div>
                             <div class="stats-details">
                                 <div class="stat-detail"><span class="stat-label">Total Keys:</span><span class="stat-value" id="statTotalKeys">0</span></div>
-                                <div class="stat-detail"><span class="stat-label">Active Sessions:</span><span class="stat-value" id="statActiveSessions">0</span></div>
-                                <div class="stat-detail"><span class="stat-label">Screenshots Captured:</span><span class="stat-value" id="statScreenshots">0</span></div>
+                                <div class="stat-detail"><span class="stat-label">Active Keys:</span><span class="stat-value" id="statActiveKeys">0</span></div>
+                                <div class="stat-detail"><span class="stat-label">Banned Keys:</span><span class="stat-value" id="statBannedKeys">0</span></div>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <div id="bannedSection" class="section hidden">
-                    <div class="card">
-                        <h2><i class="fas fa-ban"></i> Banned Keys</h2>
-                        <div class="table-container">
-                            <table id="bannedTable">
-                                <thead>
-                                    <tr>
-                                        <th>Key</th>
-                                        <th>App</th>
-                                        <th>Owner ID</th>
-                                        <th>Created</th>
-                                        <th>HWID</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="screenshotsSection" class="section hidden">
-                    <div class="card">
-                        <h2><i class="fas fa-camera"></i> Screenshots</h2>
-                        <div class="screenshots-controls">
-                            <input type="text" id="screenshotSearch" placeholder="Search by key or app...">
-                            <button class="btn-secondary" onclick="loadScreenshots()"><i class="fas fa-sync-alt"></i> Refresh</button>
-                        </div>
-                        <div class="screenshots-grid" id="screenshotsGrid"></div>
-                    </div>
-                </div>
-
-                <div id="logsSection" class="section hidden">
-                    <div class="card">
-                        <h2><i class="fas fa-history"></i> Activity Logs</h2>
-                        <div class="table-container">
-                            <table id="logsTable">
-                                <thead>
-                                    <tr>
-                                        <th>Key</th>
-                                        <th>App</th>
-                                        <th>Action</th>
-                                        <th>HWID</th>
-                                        <th>Timestamp</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="settingsSection" class="section hidden">
-                    <div class="card">
-                        <h2><i class="fas fa-cog"></i> Settings</h2>
-                        <div class="settings-form">
-                            <div class="setting-item">
-                                <label for="autoRefresh">Auto Refresh (seconds):</label>
-                                <input type="number" id="autoRefresh" min="0" value="30">
-                            </div>
-                            <div class="setting-item">
-                                <label for="theme">Theme:</label>
-                                <select id="theme">
-                                    <option value="dark-neon">Dark Neon</option>
-                                    <option value="dark-blue">Dark Blue</option>
-                                    <option value="dark-green">Dark Green</option>
-                                    <option value="dark-purple">Dark Purple</option>
-                                </select>
-                            </div>
-                            <div class="setting-item">
-                                <label for="notifyExpiring">Notify Expiring Keys:</label>
-                                <input type="checkbox" id="notifyExpiring">
-                            </div>
-                            <button class="btn-primary" onclick="saveSettings()"><i class="fas fa-save"></i> Save Settings</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="screenshotModal" class="modal hidden">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Screenshot Preview</h3>
-                    <span class="close" onclick="closeModal('screenshotModal')">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <img id="screenshotImage" src="" alt="Screenshot">
-                    <div class="screenshot-info">
-                        <p>Key: <span id="screenshotKey"></span></p>
-                        <p>App: <span id="screenshotApp"></span></p>
-                        <p>Timestamp: <span id="screenshotTimestamp"></span></p>
                     </div>
                 </div>
             </div>
