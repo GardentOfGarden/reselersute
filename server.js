@@ -1,242 +1,308 @@
-import express from "express";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from 'url';
-import cors from "cors";
-import crypto from "crypto";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
+const cors = require("cors");
+const crypto = require("crypto");
+const { OAuth2Client } = require("google-auth-library");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+const JWT_SECRET = process.env.JWT_SECRET || "eclipse_super_secret_key";
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "your-google-client-id";
+
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static("public"));
 
-const dbFile = path.join(__dirname, "keys.json");
-const screenshotsDir = path.join(__dirname, "screenshots");
+const dbFile = path.join(__dirname, "database.json");
 
-if (!fs.existsSync(screenshotsDir)) {
-  fs.mkdirSync(screenshotsDir, { recursive: true });
-}
+const defaultDatabase = {
+    apps: [],
+    users: [],
+    keys: [],
+    settings: {
+        maxKeysPerReseller: 100,
+        defaultKeyDuration: 2592000000
+    },
+    version: "2.0"
+};
 
-function loadKeys() {
-  if (!fs.existsSync(dbFile)) fs.writeFileSync(dbFile, JSON.stringify([]));
-  return JSON.parse(fs.readFileSync(dbFile, "utf-8"));
-}
-
-function saveKeys(keys) {
-  fs.writeFileSync(dbFile, JSON.stringify(keys, null, 2));
-}
-
-function generateKey(durationMs) {
-  return {
-    value: "ECLIPSE-" + crypto.randomBytes(8).toString('hex').toUpperCase() + 
-           "-" + crypto.randomBytes(8).toString('hex').toUpperCase() + 
-           "-" + crypto.randomBytes(8).toString('hex').toUpperCase(),
-    banned: false,
-    expiresAt: durationMs ? new Date(Date.now() + durationMs).toISOString() : null,
-    createdAt: new Date().toISOString(),
-    hwid: null,
-    activations: 0,
-    maxActivations: 1,
-    lastActivation: null,
-    screenshots: [],
-    appId: "ECLIPSE_CHEAT_V1", // Добавляем appId
-    appName: "Eclipse Cheat"   // Добавляем appName
-  };
-}
-
-app.post("/api/login", (req, res) => {
-  const { password } = req.body;
-  if (password === ADMIN_PASSWORD) {
-    return res.json({ success: true });
-  }
-  res.json({ success: false, message: "Wrong password" });
-});
-
-app.get("/api/keys", (req, res) => {
-  res.json(loadKeys());
-});
-
-app.post("/api/keys", (req, res) => {
-  const { durationMs, maxActivations = 1, appId = "ECLIPSE_CHEAT_V1", appName = "Eclipse Cheat" } = req.body;
-  const keys = loadKeys();
-  const key = generateKey(durationMs);
-  key.maxActivations = maxActivations;
-  key.appId = appId;
-  key.appName = appName;
-  keys.push(key);
-  saveKeys(keys);
-  res.json(key);
-});
-
-app.post("/api/ban", (req, res) => {
-  const { value } = req.body;
-  let keys = loadKeys();
-  keys = keys.map((k) => (k.value === value ? { ...k, banned: true } : k));
-  saveKeys(keys);
-  res.json({ success: true });
-});
-
-app.post("/api/unban", (req, res) => {
-  const { value } = req.body;
-  let keys = loadKeys();
-  keys = keys.map((k) => (k.value === value ? { ...k, banned: false } : k));
-  saveKeys(keys);
-  res.json({ success: true });
-});
-
-app.post("/api/keys/delete", (req, res) => {
-  const { value } = req.body;
-  let keys = loadKeys();
-  const initialLength = keys.length;
-  keys = keys.filter(k => k.value !== value);
-  
-  if (keys.length < initialLength) {
-    saveKeys(keys);
-    res.json({ success: true, message: "Key deleted successfully" });
-  } else {
-    res.status(404).json({ success: false, message: "Key not found" });
-  }
-});
-
-// ОБНОВЛЕННЫЙ МЕТОД ПРОВЕРКИ КЛЮЧА
-app.post("/api/check", (req, res) => {
-  const { value, hwid, appId = "ECLIPSE_CHEAT_V1" } = req.body; // Добавляем appId
-  const keys = loadKeys();
-  const key = keys.find((k) => k.value === value && k.appId === appId); // Проверяем appId
-  
-  if (!key) return res.json({ valid: false, reason: "not_found" });
-  if (key.banned) return res.json({ valid: false, reason: "banned" });
-  if (key.expiresAt && new Date(key.expiresAt) < new Date())
-    return res.json({ valid: false, reason: "expired" });
-  
-  if (key.hwid && key.hwid !== hwid)
-    return res.json({ valid: false, reason: "hwid_mismatch" });
-  
-  if (!key.hwid && key.activations >= key.maxActivations)
-    return res.json({ valid: false, reason: "max_activations" });
-  
-  if (!key.hwid) {
-    key.hwid = hwid;
-    key.activations += 1;
-    key.lastActivation = new Date().toISOString();
-    saveKeys(keys);
-  }
-  
-  res.json({ 
-    valid: true, 
-    expiresAt: key.expiresAt,
-    createdAt: key.createdAt,
-    appName: key.appName // Возвращаем имя приложения
-  });
-});
-
-// ОБНОВЛЕННЫЙ МЕТОД СКРИНШОТА
-app.post("/api/screenshot", (req, res) => {
-  const { key, hwid, screenshot, appId = "ECLIPSE_CHEAT_V1" } = req.body; // Добавляем appId
-  const keys = loadKeys();
-  const keyData = keys.find((k) => k.value === key && k.appId === appId); // Проверяем appId
-  
-  if (!keyData) {
-    return res.status(404).json({ success: false, message: "Key not found" });
-  }
-  
-  if (keyData.hwid && keyData.hwid !== hwid) {
-    return res.status(403).json({ success: false, message: "HWID mismatch" });
-  }
-  
-  const screenshotId = Date.now() + '-' + crypto.randomBytes(8).toString('hex');
-  const screenshotPath = path.join(screenshotsDir, `${screenshotId}.png`);
-  
-  const base64Data = screenshot.replace(/^data:image\/png;base64,/, "");
-  
-  fs.writeFile(screenshotPath, base64Data, 'base64', (err) => {
-    if (err) {
-      console.error("Error saving screenshot:", err);
-      return res.status(500).json({ success: false, message: "Failed to save screenshot" });
+function loadDatabase() {
+    if (!fs.existsSync(dbFile)) {
+        fs.writeFileSync(dbFile, JSON.stringify(defaultDatabase, null, 2));
     }
-    
-    keyData.screenshots.push({
-      id: screenshotId,
-      timestamp: new Date().toISOString(),
-      path: screenshotPath
+    return JSON.parse(fs.readFileSync(dbFile, "utf-8"));
+}
+
+function saveDatabase(db) {
+    fs.writeFileSync(dbFile, JSON.stringify(db, null, 2));
+}
+
+function generateAppId() {
+    return "app_" + crypto.randomBytes(8).toString('hex');
+}
+
+function generateKey() {
+    const segments = [];
+    for (let i = 0; i < 3; i++) {
+        segments.push(crypto.randomBytes(4).toString('hex').toUpperCase());
+    }
+    return "ECLIPSE-" + segments.join("-");
+}
+
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ success: false, message: "Access token required" });
+    }
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (error) {
+        return res.status(403).json({ success: false, message: "Invalid token" });
+    }
+}
+
+function requireRole(role) {
+    return (req, res, next) => {
+        if (req.user.role !== role && req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: "Insufficient permissions" });
+        }
+        next();
+    };
+}
+
+app.post("/api/auth/google", async (req, res) => {
+    const { token } = req.body;
+
+    try {
+        const ticket = await googleClient.verifyIdToken({
+            idToken: token,
+            audience: GOOGLE_CLIENT_ID
+        });
+
+        const payload = ticket.getPayload();
+        const db = loadDatabase();
+
+        let user = db.users.find(u => u.email === payload.email);
+        
+        if (!user) {
+            user = {
+                id: crypto.randomBytes(16).toString('hex'),
+                email: payload.email,
+                name: payload.name,
+                picture: payload.picture,
+                role: 'user',
+                createdAt: new Date().toISOString(),
+                lastLogin: new Date().toISOString()
+            };
+            db.users.push(user);
+        } else {
+            user.lastLogin = new Date().toISOString();
+        }
+
+        const jwtToken = jwt.sign(
+            { userId: user.id, email: user.email, role: user.role },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        saveDatabase(db);
+
+        res.json({
+            success: true,
+            token: jwtToken,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                picture: user.picture,
+                role: user.role
+            }
+        });
+    } catch (error) {
+        res.status(401).json({ success: false, message: "Google authentication failed" });
+    }
+});
+
+app.post("/api/auth/login", (req, res) => {
+    const { key, hwid, appId, ownerId } = req.body;
+    const db = loadDatabase();
+
+    const app = db.apps.find(a => a.id === appId && a.ownerId === ownerId);
+    if (!app || !app.enabled) {
+        return res.json({ success: false, message: "Application not available" });
+    }
+
+    const keyData = db.keys.find(k => k.value === key && k.appId === appId);
+    if (!keyData) {
+        return res.json({ success: false, message: "Invalid license key" });
+    }
+
+    if (keyData.banned) {
+        return res.json({ success: false, message: "Key is banned" });
+    }
+
+    if (keyData.expiresAt && new Date(keyData.expiresAt) < new Date()) {
+        return res.json({ success: false, message: "Key has expired" });
+    }
+
+    if (keyData.hwid && keyData.hwid !== hwid) {
+        return res.json({ success: false, message: "HWID mismatch" });
+    }
+
+    if (!keyData.hwid) {
+        keyData.hwid = hwid;
+        keyData.activations = (keyData.activations || 0) + 1;
+        keyData.lastActivation = new Date().toISOString();
+    }
+
+    keyData.lastUsed = new Date().toISOString();
+    saveDatabase(db);
+
+    const token = jwt.sign(
+        { key: keyData.value, appId, hwid },
+        JWT_SECRET,
+        { expiresIn: '1h' }
+    );
+
+    res.json({
+        success: true,
+        token: token,
+        app: {
+            name: app.name,
+            version: app.version,
+            downloadUrl: app.downloadUrl
+        }
     });
-    
-    saveKeys(keys);
-    res.json({ success: true, id: screenshotId });
-  });
 });
 
-app.get("/api/screenshot/:key/:id", (req, res) => {
-  const { key, id } = req.params;
-  const keys = loadKeys();
-  const keyData = keys.find((k) => k.value === key);
-  
-  if (!keyData) {
-    return res.status(404).send("Key not found");
-  }
-  
-  const screenshot = keyData.screenshots.find(s => s.id === id);
-  if (!screenshot) {
-    return res.status(404).send("Screenshot not found");
-  }
-  
-  if (!fs.existsSync(screenshot.path)) {
-    return res.status(404).send("Screenshot file not found");
-  }
-  
-  res.sendFile(screenshot.path);
+app.post("/api/apps", authenticateToken, requireRole('admin'), (req, res) => {
+    const { name, version, ownerId, downloadUrl } = req.body;
+    const db = loadDatabase();
+
+    const app = {
+        id: generateAppId(),
+        name,
+        version,
+        ownerId,
+        downloadUrl,
+        enabled: true,
+        createdAt: new Date().toISOString(),
+        createdBy: req.user.userId
+    };
+
+    db.apps.push(app);
+    saveDatabase(db);
+
+    res.json({ success: true, app });
 });
 
-app.get("/api/screenshots/:key", (req, res) => {
-  const { key } = req.params;
-  const keys = loadKeys();
-  const keyData = keys.find((k) => k.value === key);
-  
-  if (!keyData) {
-    return res.status(404).json({ error: "Key not found" });
-  }
-  
-  res.json(keyData.screenshots || []);
+app.get("/api/apps", authenticateToken, (req, res) => {
+    const db = loadDatabase();
+    let apps = db.apps;
+
+    if (req.user.role !== 'admin') {
+        apps = apps.filter(app => app.ownerId === req.user.userId);
+    }
+
+    res.json({ success: true, apps });
 });
 
-app.get("/api/keys/:value", (req, res) => {
-  const { value } = req.params;
-  const keys = loadKeys();
-  const key = keys.find((k) => k.value === value);
-  
-  if (!key) return res.status(404).json({ error: "Key not found" });
-  
-  res.json(key);
+app.post("/api/keys/generate", authenticateToken, (req, res) => {
+    const { appId, duration, maxActivations = 1, note } = req.body;
+    const db = loadDatabase();
+
+    if (req.user.role === 'reseller') {
+        const userKeys = db.keys.filter(k => k.createdBy === req.user.userId);
+        if (userKeys.length >= db.settings.maxKeysPerReseller) {
+            return res.json({ success: false, message: "Key limit reached" });
+        }
+
+        if (!duration || duration > 2592000000) {
+            return res.json({ success: false, message: "Invalid duration for reseller" });
+        }
+    }
+
+    const app = db.apps.find(a => a.id === appId);
+    if (!app) {
+        return res.json({ success: false, message: "Application not found" });
+    }
+
+    const key = {
+        value: generateKey(),
+        appId,
+        appName: app.name,
+        banned: false,
+        expiresAt: duration ? new Date(Date.now() + duration).toISOString() : null,
+        createdAt: new Date().toISOString(),
+        createdBy: req.user.userId,
+        creatorRole: req.user.role,
+        hwid: null,
+        activations: 0,
+        maxActivations,
+        lastActivation: null,
+        lastUsed: null,
+        note: note || ""
+    };
+
+    db.keys.push(key);
+    saveDatabase(db);
+
+    res.json({ success: true, key });
 });
 
-app.get("/api/stats", (req, res) => {
-  const keys = loadKeys();
-  const totalKeys = keys.length;
-  const activeKeys = keys.filter(k => !k.banned && (!k.expiresAt || new Date(k.expiresAt) > new Date())).length;
-  const bannedKeys = keys.filter(k => k.banned).length;
-  const expiredKeys = keys.filter(k => !k.banned && k.expiresAt && new Date(k.expiresAt) < new Date()).length;
+app.get("/api/keys", authenticateToken, (req, res) => {
+    const db = loadDatabase();
+    let keys = db.keys;
 
-  res.json({
-    totalKeys,
-    activeKeys,
-    bannedKeys,
-    expiredKeys
-  });
+    if (req.user.role !== 'admin') {
+        keys = keys.filter(key => key.createdBy === req.user.userId);
+    }
+
+    res.json({ success: true, keys });
 });
 
-app.post("/api/live/data", (req, res) => {
-  console.log("Live data received:", req.body);
-  res.json({ success: true });
+app.get("/api/stats", authenticateToken, (req, res) => {
+    const db = loadDatabase();
+
+    const stats = {
+        totalApps: db.apps.length,
+        totalKeys: db.keys.length,
+        totalUsers: db.users.length,
+        activeKeys: db.keys.filter(k => !k.banned && (!k.expiresAt || new Date(k.expiresAt) > new Date())).length,
+        bannedKeys: db.keys.filter(k => k.banned).length,
+        expiredKeys: db.keys.filter(k => !k.banned && k.expiresAt && new Date(k.expiresAt) < new Date()).length,
+        resellerKeys: db.keys.filter(k => k.creatorRole === 'reseller').length
+    };
+
+    res.json({ success: true, stats });
+});
+
+app.post("/api/users/promote", authenticateToken, requireRole('admin'), (req, res) => {
+    const { userId, role } = req.body;
+    const db = loadDatabase();
+
+    const user = db.users.find(u => u.id === userId);
+    if (!user) {
+        return res.json({ success: false, message: "User not found" });
+    }
+
+    user.role = role;
+    saveDatabase(db);
+
+    res.json({ success: true, message: "User role updated" });
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Eclipse Panel running on port ${PORT}`);
-  console.log(`📊 Admin password: ${ADMIN_PASSWORD}`);
-  console.log(`🔑 API endpoints available at http://localhost:${PORT}/api`);
+    console.log(`🚀 Eclipse Panel v2.0 running on port ${PORT}`);
+    console.log(`🔐 JWT Secret: ${JWT_SECRET.substring(0, 10)}...`);
+    console.log(`📊 API endpoints available at http://localhost:${PORT}/api`);
 });
