@@ -1,17 +1,20 @@
-const express = require("express");
-const fs = require("fs");
-const path = require("path");
-const cors = require("cors");
-const crypto = require("crypto");
-const { OAuth2Client } = require("google-auth-library");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
+import express from "express";
+import fs from "fs";
+import path from "path";
+import cors from "cors";
+import { fileURLToPath } from "url";
+import { OAuth2Client } from "google-auth-library";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "your-google-client-id";
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "your-google-client-secret";
 
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
@@ -27,7 +30,7 @@ const defaultDatabase = {
         {
             id: "admin",
             email: "admin@eclipse.com",
-            password: "$2a$10$8S6Y6Q7Q6Q7Q6Q7Q6Q7Q6O.Q6Q7Q6Q7Q6Q7Q6Q7Q6Q7Q6Q7Q6Q7Q6",
+            password: "$2a$10$8S6Y6Q7Q6Q7Q6Q7Q6Q7Q6O.Q6Q7Q6Q7Q6Q7Q6Q7Q6Q7Q6Q7Q6Q7Q6", // admin123
             name: "Administrator",
             role: "admin",
             createdAt: new Date().toISOString(),
@@ -111,7 +114,6 @@ app.post("/api/auth/google", async (req, res) => {
         let user = db.users.find(u => u.email === payload.email);
         
         if (!user) {
-            // Auto-create user with reseller role
             user = {
                 id: crypto.randomBytes(16).toString('hex'),
                 email: payload.email,
@@ -321,15 +323,13 @@ app.post("/api/keys/generate", authenticateToken, (req, res) => {
     const { appId, duration, maxActivations = 1, note } = req.body;
     const db = loadDatabase();
 
-    // Check reseller limits
     if (req.user.role === 'reseller') {
         const userKeys = db.keys.filter(k => k.createdBy === req.user.userId);
         if (userKeys.length >= db.settings.maxKeysPerReseller) {
             return res.json({ success: false, message: "Key limit reached" });
         }
 
-        // Resellers can only create temporary keys
-        if (!duration || duration > 2592000000) { // 30 days max
+        if (!duration || duration > 2592000000) {
             return res.json({ success: false, message: "Invalid duration for reseller" });
         }
     }
@@ -467,8 +467,19 @@ app.put("/api/settings", authenticateToken, requireRole('admin'), (req, res) => 
     res.json({ success: true, message: "Settings updated" });
 });
 
+// Serve admin panel
+app.get("/admin", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
+
+app.get("/", (req, res) => {
+    res.redirect("/admin");
+});
+
 app.listen(PORT, () => {
     console.log(`🚀 Eclipse Panel v3.0 running on port ${PORT}`);
     console.log(`🔐 Google Auth: ${GOOGLE_CLIENT_ID ? "Enabled" : "Disabled"}`);
     console.log(`📊 Admin panel: http://localhost:${PORT}`);
 });
+
+export default app;
