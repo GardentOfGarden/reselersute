@@ -31,6 +31,22 @@ function initializeEventListeners() {
             showSection(section);
         });
     });
+
+    // Добавляем обработчики для модальных окон
+    document.getElementById('createAppForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        createApp();
+    });
+
+    document.getElementById('createUserForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        createUser();
+    });
+
+    document.getElementById('generateKeyForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        generateKey();
+    });
 }
 
 async function handleLogin(e) {
@@ -39,6 +55,11 @@ async function handleLogin(e) {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     
+    if (!username || !password) {
+        showNotification('Please enter both username and password', 'error');
+        return;
+    }
+
     try {
         const response = await fetch('/api/auth/login', {
             method: 'POST',
@@ -59,9 +80,10 @@ async function handleLogin(e) {
             loadDashboard();
             showNotification('Login successful!', 'success');
         } else {
-            showNotification(data.message, 'error');
+            showNotification(data.message || 'Login failed', 'error');
         }
     } catch (error) {
+        console.error('Login error:', error);
         showNotification('Login failed. Please try again.', 'error');
     }
 }
@@ -77,6 +99,11 @@ function showMainPanel() {
     if (currentUser.role !== 'admin') {
         document.getElementById('usersTab').style.display = 'none';
         document.getElementById('settingsTab').style.display = 'none';
+        document.getElementById('createUserBtn').style.display = 'none';
+        document.getElementById('quickUserBtn').style.display = 'none';
+    } else {
+        document.getElementById('createUserBtn').style.display = 'inline-flex';
+        document.getElementById('quickUserBtn').style.display = 'inline-flex';
     }
 }
 
@@ -262,11 +289,11 @@ function showCreateAppModal() {
 
 function hideCreateAppModal() {
     document.getElementById('createAppModal').classList.add('hidden');
-    document.getElementById('appForm').reset();
+    document.getElementById('createAppForm').reset();
 }
 
 async function createApp() {
-    const formData = new FormData(document.getElementById('appForm'));
+    const formData = new FormData(document.getElementById('createAppForm'));
     const appData = {
         name: formData.get('name'),
         description: formData.get('description'),
@@ -304,11 +331,11 @@ function showCreateUserModal() {
 
 function hideCreateUserModal() {
     document.getElementById('createUserModal').classList.add('hidden');
-    document.getElementById('userForm').reset();
+    document.getElementById('createUserForm').reset();
 }
 
 async function createUser() {
-    const formData = new FormData(document.getElementById('userForm'));
+    const formData = new FormData(document.getElementById('createUserForm'));
     const userData = {
         username: formData.get('username'),
         password: formData.get('password'),
@@ -347,7 +374,8 @@ function showGenerateKeyModal() {
 
 function hideGenerateKeyModal() {
     document.getElementById('generateKeyModal').classList.add('hidden');
-    document.getElementById('keyForm').reset();
+    document.getElementById('generateKeyForm').reset();
+    document.getElementById('keyResult').classList.add('hidden');
 }
 
 async function loadAppsForSelect() {
@@ -358,7 +386,7 @@ async function loadAppsForSelect() {
         
         const data = await response.json();
         const select = document.getElementById('keyAppId');
-        select.innerHTML = '';
+        select.innerHTML = '<option value="">Select Application</option>';
         
         if (data.success) {
             data.apps.forEach(app => {
@@ -376,7 +404,7 @@ async function loadAppsForSelect() {
 }
 
 async function generateKey() {
-    const formData = new FormData(document.getElementById('keyForm'));
+    const formData = new FormData(document.getElementById('generateKeyForm'));
     const keyData = {
         appId: formData.get('appId'),
         duration: formData.get('duration'),
@@ -418,7 +446,18 @@ function copyGeneratedKey() {
 
 async function toggleAppStatus(appId) {
     try {
-        const app = await getApp(appId);
+        const appsResponse = await fetch('/api/apps', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        const appsData = await appsResponse.json();
+        const app = appsData.apps.find(a => a.id === appId);
+        
+        if (!app) {
+            showNotification('App not found', 'error');
+            return;
+        }
+
         const newStatus = app.status === 'active' ? 'disabled' : 'active';
         
         const response = await fetch(`/api/apps/${appId}`, {
@@ -443,13 +482,12 @@ async function toggleAppStatus(appId) {
     }
 }
 
-async function getApp(appId) {
-    const response = await fetch('/api/apps', {
-        headers: { 'Authorization': `Bearer ${authToken}` }
-    });
-    
-    const data = await response.json();
-    return data.apps.find(app => app.id === appId);
+async function deleteApp(appId) {
+    if (!confirm('Are you sure you want to delete this application? This action cannot be undone.')) {
+        return;
+    }
+
+    showNotification('App deletion not implemented in this version', 'error');
 }
 
 async function banKey(keyId) {
@@ -476,17 +514,7 @@ async function banKey(keyId) {
 
 async function updateUserRole(userId, newRole) {
     try {
-        const response = await fetch('/api/users', {
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showNotification('User role updated successfully', 'success');
-        } else {
-            showNotification(data.message, 'error');
-        }
+        showNotification('User role update not fully implemented in this version', 'warning');
     } catch (error) {
         showNotification('Failed to update user role', 'error');
     }
@@ -528,7 +556,7 @@ function showNotification(message, type) {
     
     setTimeout(() => {
         notification.classList.remove('show');
-    }, 3000);
+    }, 5000);
 }
 
 function logout() {
