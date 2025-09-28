@@ -1,55 +1,49 @@
-let currentUser = null;
 let authToken = null;
+let currentUser = null;
 
-// Initialize app
 document.addEventListener('DOMContentLoaded', function() {
-    checkAuthStatus();
-    initializeGoogleAuth();
+    checkAuth();
+    initializeEventListeners();
 });
 
-function initializeGoogleAuth() {
-    // Google Sign-In will be initialized automatically via HTML
-}
-
-async function checkAuthStatus() {
-    const savedToken = localStorage.getItem('eclipse_token');
-    const savedUser = localStorage.getItem('eclipse_user');
+function checkAuth() {
+    const token = localStorage.getItem('eclipse_token');
+    const user = localStorage.getItem('eclipse_user');
     
-    if (savedToken && savedUser) {
-        try {
-            authToken = savedToken;
-            currentUser = JSON.parse(savedUser);
-            showMainPanel();
-            await loadDashboardData();
-        } catch (error) {
-            logout();
-        }
+    if (token && user) {
+        authToken = token;
+        currentUser = JSON.parse(user);
+        showMainPanel();
+        loadDashboard();
     }
 }
 
-function showAuthTab(tab) {
-    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('passwordAuth').classList.add('hidden');
-    document.getElementById('googleAuth').classList.add('hidden');
+function initializeEventListeners() {
+    document.getElementById('loginForm').addEventListener('submit', handleLogin);
+    document.getElementById('createAppBtn').addEventListener('click', showCreateAppModal);
+    document.getElementById('createUserBtn').addEventListener('click', showCreateUserModal);
+    document.getElementById('generateKeyBtn').addEventListener('click', showGenerateKeyModal);
+    document.getElementById('logoutBtn').addEventListener('click', logout);
     
-    event.target.classList.add('active');
-    document.getElementById(tab + 'Auth').classList.remove('hidden');
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const section = this.getAttribute('data-section');
+            showSection(section);
+        });
+    });
 }
 
-async function login() {
-    const email = document.getElementById('email').value;
+async function handleLogin(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     
-    if (!email || !password) {
-        showMessage('Please fill all fields', 'error');
-        return;
-    }
-
     try {
         const response = await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ username, password })
         });
         
         const data = await response.json();
@@ -57,115 +51,55 @@ async function login() {
         if (data.success) {
             authToken = data.token;
             currentUser = data.user;
-            saveAuthData();
+            
+            localStorage.setItem('eclipse_token', authToken);
+            localStorage.setItem('eclipse_user', JSON.stringify(currentUser));
+            
             showMainPanel();
-            await loadDashboardData();
+            loadDashboard();
+            showNotification('Login successful!', 'success');
         } else {
-            showMessage(data.message, 'error');
+            showNotification(data.message, 'error');
         }
     } catch (error) {
-        showMessage('Login failed. Please try again.', 'error');
+        showNotification('Login failed. Please try again.', 'error');
     }
 }
 
-function handleGoogleSignIn(response) {
-    const token = response.credential;
-    
-    fetch('/api/auth/google', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            authToken = data.token;
-            currentUser = data.user;
-            saveAuthData();
-            showMainPanel();
-            loadDashboardData();
-        } else {
-            showMessage(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        showMessage('Google login failed', 'error');
-    });
-}
-
-function saveAuthData() {
-    localStorage.setItem('eclipse_token', authToken);
-    localStorage.setItem('eclipse_user', JSON.stringify(currentUser));
-}
-
 function showMainPanel() {
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('mainPanel').classList.remove('hidden');
+    document.getElementById('authContainer').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
     
-    // Update user info
-    document.getElementById('userName').textContent = currentUser.name;
+    document.getElementById('userName').textContent = currentUser.username;
     document.getElementById('userRole').textContent = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+    document.getElementById('userAvatar').textContent = currentUser.username.charAt(0).toUpperCase();
     
-    if (currentUser.picture) {
-        document.getElementById('userAvatar').innerHTML = `<img src="${currentUser.picture}" alt="${currentUser.name}">`;
-    } else {
-        document.getElementById('userAvatar').innerHTML = currentUser.name.charAt(0).toUpperCase();
+    if (currentUser.role !== 'admin') {
+        document.getElementById('usersTab').style.display = 'none';
+        document.getElementById('settingsTab').style.display = 'none';
     }
 }
 
 function showSection(section) {
-    // Hide all sections
     document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-    
-    // Remove active class from all nav items
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     
-    // Show selected section
     document.getElementById(section + 'Section').classList.remove('hidden');
+    document.querySelector(`[data-section="${section}"]`).classList.add('active');
     
-    // Add active class to clicked nav item
-    event.target.classList.add('active');
+    document.getElementById('pageTitle').textContent = 
+        section.charAt(0).toUpperCase() + section.slice(1);
     
-    // Update page title
-    updatePageTitle(section);
-    
-    // Load section data
-    loadSectionData(section);
-}
-
-function updatePageTitle(section) {
-    const titles = {
-        'dashboard': 'Dashboard Overview',
-        'apps': 'Applications Management',
-        'keys': 'License Keys',
-        'users': 'Users Management',
-        'settings': 'System Settings'
-    };
-    
-    document.getElementById('pageTitle').textContent = titles[section] || 'Eclipse Panel';
-}
-
-async function loadSectionData(section) {
     switch(section) {
-        case 'dashboard':
-            await loadDashboardData();
-            break;
-        case 'apps':
-            await loadApps();
-            break;
-        case 'keys':
-            await loadKeys();
-            break;
-        case 'users':
-            await loadUsers();
-            break;
-        case 'settings':
-            await loadSettings();
-            break;
+        case 'dashboard': loadDashboard(); break;
+        case 'apps': loadApps(); break;
+        case 'keys': loadKeys(); break;
+        case 'users': loadUsers(); break;
+        case 'settings': loadSettings(); break;
     }
 }
 
-async function loadDashboardData() {
+async function loadDashboard() {
     try {
         const response = await fetch('/api/stats', {
             headers: { 'Authorization': `Bearer ${authToken}` }
@@ -176,11 +110,11 @@ async function loadDashboardData() {
         if (data.success) {
             document.getElementById('statApps').textContent = data.stats.totalApps;
             document.getElementById('statKeys').textContent = data.stats.totalKeys;
-            document.getElementById('statUsers').textContent = data.stats.totalUsers;
-            document.getElementById('statActive').textContent = data.stats.todayActivations;
+            document.getElementById('statActiveKeys').textContent = data.stats.activeKeys;
+            document.getElementById('statBannedKeys').textContent = data.stats.bannedKeys;
         }
     } catch (error) {
-        console.error('Failed to load stats:', error);
+        showNotification('Failed to load dashboard data', 'error');
     }
 }
 
@@ -191,21 +125,29 @@ async function loadApps() {
         });
         
         const data = await response.json();
+        const tbody = document.querySelector('#appsTable tbody');
+        tbody.innerHTML = '';
         
         if (data.success) {
-            const tbody = document.querySelector('#appsTable tbody');
-            tbody.innerHTML = '';
-            
             data.apps.forEach(app => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${app.name}</td>
-                    <td><code>${app.id}</code></td>
-                    <td>${app.version}</td>
-                    <td><span class="status-badge ${app.enabled ? 'status-active' : 'status-banned'}">${app.enabled ? 'Active' : 'Disabled'}</span></td>
                     <td>
-                        <button class="btn-secondary btn-small" onclick="toggleApp('${app.id}', ${!app.enabled})">
-                            ${app.enabled ? 'Disable' : 'Enable'}
+                        <div class="app-name">${app.name}</div>
+                        <div class="app-desc">${app.description || 'No description'}</div>
+                    </td>
+                    <td><code>${app.id}</code></td>
+                    <td>${app.ownerName}</td>
+                    <td><span class="status-badge status-${app.status}">${app.status}</span></td>
+                    <td>${app.totalKeys || 0}</td>
+                    <td>${app.activeKeys || 0}</td>
+                    <td>${new Date(app.createdAt).toLocaleDateString()}</td>
+                    <td>
+                        <button class="btn-secondary btn-small" onclick="toggleAppStatus('${app.id}')">
+                            ${app.status === 'active' ? 'Disable' : 'Enable'}
+                        </button>
+                        <button class="btn-danger btn-small" onclick="deleteApp('${app.id}')">
+                            <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 `;
@@ -213,7 +155,7 @@ async function loadApps() {
             });
         }
     } catch (error) {
-        console.error('Failed to load apps:', error);
+        showNotification('Failed to load applications', 'error');
     }
 }
 
@@ -224,28 +166,27 @@ async function loadKeys() {
         });
         
         const data = await response.json();
+        const tbody = document.querySelector('#keysTable tbody');
+        tbody.innerHTML = '';
         
         if (data.success) {
-            const tbody = document.querySelector('#keysTable tbody');
-            tbody.innerHTML = '';
-            
             data.keys.forEach(key => {
-                const status = key.banned ? 'banned' : 
-                             (key.expiresAt && new Date(key.expiresAt) < new Date()) ? 'expired' : 'active';
-                const statusText = key.banned ? 'Banned' : 
-                                 (key.expiresAt && new Date(key.expiresAt) < new Date()) ? 'Expired' : 'Active';
+                const isExpired = new Date(key.expiresAt) < new Date();
+                const status = key.status === 'banned' ? 'banned' : isExpired ? 'expired' : 'active';
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td><code>${key.value}</code></td>
+                    <td><code>${key.key}</code></td>
                     <td>${key.appName}</td>
-                    <td>${new Date(key.createdAt).toLocaleDateString()}</td>
-                    <td>${key.expiresAt ? new Date(key.expiresAt).toLocaleDateString() : 'Never'}</td>
-                    <td><span class="status-badge status-${status}">${statusText}</span></td>
+                    <td>${key.ownerName}</td>
+                    <td>${key.duration} days</td>
+                    <td>${new Date(key.expiresAt).toLocaleDateString()}</td>
+                    <td>${key.activations}/${key.maxActivations}</td>
+                    <td><span class="status-badge status-${status}">${status}</span></td>
                     <td>
-                        ${!key.banned ? `
-                        <button class="btn-danger btn-small" onclick="banKey('${key.value}')">
-                            Ban
+                        ${key.status === 'active' ? `
+                        <button class="btn-danger btn-small" onclick="banKey(${key.id})">
+                            <i class="fas fa-ban"></i>
                         </button>
                         ` : ''}
                     </td>
@@ -254,15 +195,12 @@ async function loadKeys() {
             });
         }
     } catch (error) {
-        console.error('Failed to load keys:', error);
+        showNotification('Failed to load keys', 'error');
     }
 }
 
 async function loadUsers() {
-    if (currentUser.role !== 'admin') {
-        document.getElementById('usersSection').innerHTML = '<div class="card"><div class="card-body"><p>Access denied. Admin rights required.</p></div></div>';
-        return;
-    }
+    if (currentUser.role !== 'admin') return;
     
     try {
         const response = await fetch('/api/users', {
@@ -270,20 +208,19 @@ async function loadUsers() {
         });
         
         const data = await response.json();
+        const tbody = document.querySelector('#usersTable tbody');
+        tbody.innerHTML = '';
         
         if (data.success) {
-            const tbody = document.querySelector('#usersTable tbody');
-            tbody.innerHTML = '';
-            
             data.users.forEach(user => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${user.name}</td>
-                    <td>${user.email}</td>
-                    <td><span class="status-badge status-active">${user.role}</span></td>
-                    <td>${new Date(user.lastLogin).toLocaleDateString()}</td>
+                    <td>${user.username}</td>
+                    <td>${user.email || 'N/A'}</td>
+                    <td><span class="status-badge status-${user.role}">${user.role}</span></td>
+                    <td>${new Date(user.createdAt).toLocaleDateString()}</td>
                     <td>
-                        <select onchange="changeUserRole('${user.id}', this.value)">
+                        <select onchange="updateUserRole(${user.id}, this.value)" ${user.id === currentUser.id ? 'disabled' : ''}>
                             <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
                             <option value="reseller" ${user.role === 'reseller' ? 'selected' : ''}>Reseller</option>
                             <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
@@ -294,15 +231,12 @@ async function loadUsers() {
             });
         }
     } catch (error) {
-        console.error('Failed to load users:', error);
+        showNotification('Failed to load users', 'error');
     }
 }
 
 async function loadSettings() {
-    if (currentUser.role !== 'admin') {
-        document.getElementById('settingsSection').innerHTML = '<div class="card"><div class="card-body"><p>Access denied. Admin rights required.</p></div></div>';
-        return;
-    }
+    if (currentUser.role !== 'admin') return;
     
     try {
         const response = await fetch('/api/settings', {
@@ -312,56 +246,217 @@ async function loadSettings() {
         const data = await response.json();
         
         if (data.success) {
-            document.getElementById('maxKeys').value = data.settings.maxKeysPerReseller;
-            document.getElementById('keyDuration').value = data.settings.defaultKeyDuration / (1000 * 60 * 60 * 24);
-            document.getElementById('googleAuthEnabled').value = data.settings.googleAuthEnabled.toString();
+            document.getElementById('maxResellerKeys').value = data.settings.maxResellerKeys;
+            document.getElementById('defaultKeyDuration').value = data.settings.defaultKeyDuration;
+            document.getElementById('screenshotEnabled').checked = data.settings.screenshotEnabled;
         }
     } catch (error) {
-        console.error('Failed to load settings:', error);
+        showNotification('Failed to load settings', 'error');
     }
 }
 
-// Modal functions
 function showCreateAppModal() {
-    // Implementation for app creation modal
-    alert('App creation modal would open here');
+    const modal = document.getElementById('createAppModal');
+    modal.classList.remove('hidden');
 }
 
-function showGenerateKeyModal() {
-    // Implementation for key generation modal
-    alert('Key generation modal would open here');
+function hideCreateAppModal() {
+    document.getElementById('createAppModal').classList.add('hidden');
+    document.getElementById('appForm').reset();
 }
 
-// Action functions
-async function toggleApp(appId, enabled) {
+async function createApp() {
+    const formData = new FormData(document.getElementById('appForm'));
+    const appData = {
+        name: formData.get('name'),
+        description: formData.get('description'),
+        dllUrl: formData.get('dllUrl'),
+        status: formData.get('status')
+    };
+    
     try {
-        const response = await fetch(`/api/apps/${appId}`, {
-            method: 'PUT',
-            headers: { 
+        const response = await fetch('/api/apps', {
+            method: 'POST',
+            headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${authToken}`
             },
-            body: JSON.stringify({ enabled })
+            body: JSON.stringify(appData)
         });
         
         const data = await response.json();
         
         if (data.success) {
-            await loadApps();
-            showMessage(`App ${enabled ? 'enabled' : 'disabled'} successfully`, 'success');
+            hideCreateAppModal();
+            loadApps();
+            showNotification('Application created successfully!', 'success');
         } else {
-            showMessage(data.message, 'error');
+            showNotification(data.message, 'error');
         }
     } catch (error) {
-        showMessage('Failed to update app', 'error');
+        showNotification('Failed to create application', 'error');
     }
 }
 
-async function banKey(keyValue) {
+function showCreateUserModal() {
+    document.getElementById('createUserModal').classList.remove('hidden');
+}
+
+function hideCreateUserModal() {
+    document.getElementById('createUserModal').classList.add('hidden');
+    document.getElementById('userForm').reset();
+}
+
+async function createUser() {
+    const formData = new FormData(document.getElementById('userForm'));
+    const userData = {
+        username: formData.get('username'),
+        password: formData.get('password'),
+        role: formData.get('role'),
+        email: formData.get('email')
+    };
+    
+    try {
+        const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify(userData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            hideCreateUserModal();
+            loadUsers();
+            showNotification('User created successfully!', 'success');
+        } else {
+            showNotification(data.message, 'error');
+        }
+    } catch (error) {
+        showNotification('Failed to create user', 'error');
+    }
+}
+
+function showGenerateKeyModal() {
+    loadAppsForSelect();
+    document.getElementById('generateKeyModal').classList.remove('hidden');
+}
+
+function hideGenerateKeyModal() {
+    document.getElementById('generateKeyModal').classList.add('hidden');
+    document.getElementById('keyForm').reset();
+}
+
+async function loadAppsForSelect() {
+    try {
+        const response = await fetch('/api/apps', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        const data = await response.json();
+        const select = document.getElementById('keyAppId');
+        select.innerHTML = '';
+        
+        if (data.success) {
+            data.apps.forEach(app => {
+                if (app.status === 'active') {
+                    const option = document.createElement('option');
+                    option.value = app.id;
+                    option.textContent = app.name;
+                    select.appendChild(option);
+                }
+            });
+        }
+    } catch (error) {
+        showNotification('Failed to load applications', 'error');
+    }
+}
+
+async function generateKey() {
+    const formData = new FormData(document.getElementById('keyForm'));
+    const keyData = {
+        appId: formData.get('appId'),
+        duration: formData.get('duration'),
+        maxActivations: formData.get('maxActivations'),
+        note: formData.get('note')
+    };
+    
+    try {
+        const response = await fetch('/api/keys/generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify(keyData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            document.getElementById('generatedKey').textContent = data.key.key;
+            document.getElementById('keyResult').classList.remove('hidden');
+            loadKeys();
+            showNotification('Key generated successfully!', 'success');
+        } else {
+            showNotification(data.message, 'error');
+        }
+    } catch (error) {
+        showNotification('Failed to generate key', 'error');
+    }
+}
+
+function copyGeneratedKey() {
+    const key = document.getElementById('generatedKey').textContent;
+    navigator.clipboard.writeText(key).then(() => {
+        showNotification('Key copied to clipboard!', 'success');
+    });
+}
+
+async function toggleAppStatus(appId) {
+    try {
+        const app = await getApp(appId);
+        const newStatus = app.status === 'active' ? 'disabled' : 'active';
+        
+        const response = await fetch(`/api/apps/${appId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            loadApps();
+            showNotification(`App ${newStatus === 'active' ? 'enabled' : 'disabled'} successfully`, 'success');
+        } else {
+            showNotification(data.message, 'error');
+        }
+    } catch (error) {
+        showNotification('Failed to update app status', 'error');
+    }
+}
+
+async function getApp(appId) {
+    const response = await fetch('/api/apps', {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    
+    const data = await response.json();
+    return data.apps.find(app => app.id === appId);
+}
+
+async function banKey(keyId) {
     if (!confirm('Are you sure you want to ban this key?')) return;
     
     try {
-        const response = await fetch(`/api/keys/${keyValue}/ban`, {
+        const response = await fetch(`/api/keys/${keyId}/ban`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
@@ -369,77 +464,71 @@ async function banKey(keyValue) {
         const data = await response.json();
         
         if (data.success) {
-            await loadKeys();
-            showMessage('Key banned successfully', 'success');
+            loadKeys();
+            showNotification('Key banned successfully', 'success');
         } else {
-            showMessage(data.message, 'error');
+            showNotification(data.message, 'error');
         }
     } catch (error) {
-        showMessage('Failed to ban key', 'error');
+        showNotification('Failed to ban key', 'error');
     }
 }
 
-async function changeUserRole(userId, newRole) {
+async function updateUserRole(userId, newRole) {
     try {
-        const response = await fetch('/api/users/promote', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authToken}`
-            },
-            body: JSON.stringify({ userId, role: newRole })
+        const response = await fetch('/api/users', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
         });
         
         const data = await response.json();
         
         if (data.success) {
-            showMessage(`User role changed to ${newRole}`, 'success');
+            showNotification('User role updated successfully', 'success');
         } else {
-            showMessage(data.message, 'error');
+            showNotification(data.message, 'error');
         }
     } catch (error) {
-        showMessage('Failed to change user role', 'error');
+        showNotification('Failed to update user role', 'error');
     }
 }
 
 async function saveSettings() {
     const settings = {
-        maxKeysPerReseller: parseInt(document.getElementById('maxKeys').value),
-        defaultKeyDuration: parseInt(document.getElementById('keyDuration').value) * 24 * 60 * 60 * 1000,
-        googleAuthEnabled: document.getElementById('googleAuthEnabled').value === 'true'
+        maxResellerKeys: parseInt(document.getElementById('maxResellerKeys').value),
+        defaultKeyDuration: parseInt(document.getElementById('defaultKeyDuration').value),
+        screenshotEnabled: document.getElementById('screenshotEnabled').checked
     };
     
     try {
         const response = await fetch('/api/settings', {
             method: 'PUT',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${authToken}`
             },
-            body: JSON.stringify({ settings })
+            body: JSON.stringify(settings)
         });
         
         const data = await response.json();
         
         if (data.success) {
-            showMessage('Settings saved successfully', 'success');
+            showNotification('Settings saved successfully', 'success');
         } else {
-            showMessage(data.message, 'error');
+            showNotification(data.message, 'error');
         }
     } catch (error) {
-        showMessage('Failed to save settings', 'error');
+        showNotification('Failed to save settings', 'error');
     }
 }
 
-function showMessage(message, type) {
-    const messageEl = document.getElementById('loginMsg');
-    messageEl.textContent = message;
-    messageEl.className = `login-message ${type}`;
-    messageEl.style.display = 'block';
+function showNotification(message, type) {
+    const notification = document.getElementById('notification');
+    notification.textContent = message;
+    notification.className = `notification notification-${type} show`;
     
     setTimeout(() => {
-        messageEl.style.display = 'none';
-    }, 5000);
+        notification.classList.remove('show');
+    }, 3000);
 }
 
 function logout() {
@@ -448,11 +537,8 @@ function logout() {
     authToken = null;
     currentUser = null;
     
-    document.getElementById('mainPanel').classList.add('hidden');
-    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('authContainer').classList.remove('hidden');
     
-    // Reset Google Sign-In
-    google.accounts.id.revoke(localStorage.getItem('email'), done => {
-        console.log('Google session revoked');
-    });
+    showNotification('Logged out successfully', 'success');
 }
