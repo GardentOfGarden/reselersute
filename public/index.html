@@ -1,244 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eclipse Auth - Secure Authentication System</title>
+    <title>Eclipse Auth - Secure Authentication</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4338ca;
-            --secondary: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --dark: #0f172a;
-            --darker: #020617;
-            --light: #f1f5f9;
-            --card-bg: rgba(30, 41, 59, 0.8);
-            --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', system-ui, sans-serif;
-        }
-
-        body {
-            background: var(--darker);
-            color: var(--light);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        .auth-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, var(--dark) 0%, var(--darker) 100%);
-            position: relative;
-        }
-
-        .auth-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
-        }
-
-        .auth-box {
-            background: rgba(15, 23, 42, 0.9);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 3rem;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            position: relative;
-            z-index: 1;
-        }
-
-        .logo {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .logo-icon {
-            font-size: 3rem;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
-        }
-
-        .logo h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .input-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: var(--light);
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            color: var(--light);
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 1rem;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary {
-            background: var(--gradient);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
-        }
-
-        .dashboard {
-            display: none;
-            min-height: 100vh;
-            background: var(--darker);
-        }
-
-        .sidebar {
-            width: 280px;
-            background: rgba(15, 23, 42, 0.9);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-        }
-
-        .sidebar-header {
-            padding: 2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--gradient);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-        }
-
-        .nav-section {
-            padding: 1.5rem 0;
-        }
-
-        .nav-section h3 {
-            padding: 0 2rem 1rem;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--light);
-            opacity: 0.6;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem 2rem;
-            color: var(--light);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            border-left: 3px solid transparent;
-        }
-
-        .nav-item:hover, .nav-item.active {
-            background: rgba(99, 102, 241, 0.1);
-            border-left-color: var(--primary);
-            color: var(--primary);
-        }
-
-        .main-content {
-            margin-left: 280px;
-            padding: 2rem;
-            flex: 1;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: var(--card-bg);
-            border-radius: 15px;
-            padding: 1.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="auth-container" id="authContainer">
@@ -248,65 +15,75 @@
                     <i class="fas fa-shield-alt"></i>
                 </div>
                 <h1>Eclipse Auth</h1>
+                <p style="color: var(--light); opacity: 0.7; margin-top: 0.5rem;">Secure Authentication System</p>
             </div>
             
             <form id="loginForm">
                 <div class="input-group">
-                    <label for="username">Username</label>
+                    <label for="username"><i class="fas fa-user"></i> Username</label>
                     <input type="text" id="username" placeholder="Enter your username" required>
                 </div>
                 
                 <div class="input-group">
-                    <label for="password">Password</label>
+                    <label for="password"><i class="fas fa-lock"></i> Password</label>
                     <input type="password" id="password" placeholder="Enter your password" required>
                 </div>
                 
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
                     <i class="fas fa-sign-in-alt"></i> Sign In
                 </button>
             </form>
+            
+            <div style="margin-top: 1.5rem; text-align: center; color: var(--light); opacity: 0.7; font-size: 0.875rem;">
+                <p>Default Admin: jadx / fezy123456</p>
+            </div>
         </div>
     </div>
 
-    <div class="dashboard" id="dashboard">
+    <div class="dashboard hidden" id="dashboard">
         <div class="sidebar">
             <div class="sidebar-header">
-                <div class="user-info">
-                    <div class="user-avatar" id="userAvatar">JD</div>
-                    <div>
-                        <div id="userName">jadx</div>
-                        <div style="font-size: 0.8rem; opacity: 0.7;" id="userRole">Super Admin</div>
-                    </div>
+                <div class="logo-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h2>Eclipse</h2>
+            </div>
+            
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">J</div>
+                <div>
+                    <div style="font-weight: 600;" id="userName">jadx</div>
+                    <div style="font-size: 0.8rem; opacity: 0.7;" id="userRole">Admin</div>
                 </div>
             </div>
 
             <nav>
                 <div class="nav-section">
                     <h3>Main</h3>
-                    <a href="#" class="nav-item active" data-section="dashboard">
+                    <a class="nav-item active" data-section="dashboard">
                         <i class="fas fa-tachometer-alt"></i> Dashboard
                     </a>
-                    <a href="#" class="nav-item" data-section="apps">
+                    <a class="nav-item" data-section="apps">
                         <i class="fas fa-cube"></i> Applications
                     </a>
-                </div>
-
-                <div class="nav-section">
-                    <h3>Management</h3>
-                    <a href="#" class="nav-item" data-section="keys">
+                    <a class="nav-item" data-section="keys">
                         <i class="fas fa-key"></i> License Keys
                     </a>
-                    <a href="#" class="nav-item" data-section="users">
+                </div>
+
+                <div class="nav-section" id="adminSection">
+                    <h3>Administration</h3>
+                    <a class="nav-item" data-section="users" id="usersTab">
                         <i class="fas fa-users"></i> Users
+                    </a>
+                    <a class="nav-item" data-section="settings" id="settingsTab">
+                        <i class="fas fa-cog"></i> Settings
                     </a>
                 </div>
 
                 <div class="nav-section">
-                    <h3>Settings</h3>
-                    <a href="#" class="nav-item" data-section="settings">
-                        <i class="fas fa-cog"></i> System Settings
-                    </a>
-                    <a href="#" class="nav-item" id="logoutBtn">
+                    <h3>Account</h3>
+                    <a class="nav-item" id="logoutBtn">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </a>
                 </div>
@@ -316,33 +93,269 @@
         <div class="main-content">
             <div class="header">
                 <h1 id="pageTitle">Dashboard</h1>
-                <button class="btn btn-primary" id="createAppBtn" style="width: auto;">
-                    <i class="fas fa-plus"></i> New Application
-                </button>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Total Applications</h3>
-                    <div style="font-size: 2rem; font-weight: 700;" id="statApps">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Active Keys</h3>
-                    <div style="font-size: 2rem; font-weight: 700;" id="statKeys">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Total Users</h3>
-                    <div style="font-size: 2rem; font-weight: 700;" id="statUsers">0</div>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn btn-primary" id="createAppBtn">
+                        <i class="fas fa-plus"></i> New App
+                    </button>
+                    <button class="btn btn-secondary" id="generateKeyBtn">
+                        <i class="fas fa-key"></i> Generate Key
+                    </button>
+                    <button class="btn btn-secondary" id="createUserBtn" style="display: none;">
+                        <i class="fas fa-user-plus"></i> New User
+                    </button>
                 </div>
             </div>
 
-            <div class="card">
-                <h2>Recent Activity</h2>
-                <div id="recentActivity">Loading...</div>
+            <div id="dashboardSection" class="section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Applications</h3>
+                        <div class="value" id="statApps">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Keys</h3>
+                        <div class="value" id="statKeys">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Active Keys</h3>
+                        <div class="value" id="statActiveKeys">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Banned Keys</h3>
+                        <div class="value" id="statBannedKeys">0</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2><i class="fas fa-chart-line"></i> Quick Actions</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <button class="btn btn-primary" onclick="showCreateAppModal()">
+                            <i class="fas fa-plus"></i> Create Application
+                        </button>
+                        <button class="btn btn-secondary" onclick="showGenerateKeyModal()">
+                            <i class="fas fa-key"></i> Generate License Key
+                        </button>
+                        <button class="btn btn-secondary" onclick="showCreateUserModal()" id="quickUserBtn" style="display: none;">
+                            <i class="fas fa-user-plus"></i> Create User
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="appsSection" class="section hidden">
+                <div class="card">
+                    <h2><i class="fas fa-cube"></i> Applications</h2>
+                    <div class="table-container">
+                        <table id="appsTable">
+                            <thead>
+                                <tr>
+                                    <th>Application</th>
+                                    <th>App ID</th>
+                                    <th>Owner</th>
+                                    <th>Status</th>
+                                    <th>Total Keys</th>
+                                    <th>Active Keys</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="keysSection" class="section hidden">
+                <div class="card">
+                    <h2><i class="fas fa-key"></i> License Keys</h2>
+                    <div class="table-container">
+                        <table id="keysTable">
+                            <thead>
+                                <tr>
+                                    <th>Key</th>
+                                    <th>Application</th>
+                                    <th>Owner</th>
+                                    <th>Duration</th>
+                                    <th>Expires</th>
+                                    <th>Activations</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="usersSection" class="section hidden">
+                <div class="card">
+                    <h2><i class="fas fa-users"></i> Users Management</h2>
+                    <div class="table-container">
+                        <table id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="settingsSection" class="section hidden">
+                <div class="card">
+                    <h2><i class="fas fa-cog"></i> System Settings</h2>
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label for="maxResellerKeys">Max Keys per Reseller</label>
+                            <input type="number" id="maxResellerKeys" min="1" max="1000">
+                        </div>
+                        <div class="input-group">
+                            <label for="defaultKeyDuration">Default Key Duration (days)</label>
+                            <input type="number" id="defaultKeyDuration" min="1" max="365">
+                        </div>
+                        <div class="input-group">
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" id="screenshotEnabled">
+                                Enable Screenshot Capture
+                            </label>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="saveSettings()">
+                                <i class="fas fa-save"></i> Save Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <!-- Modals -->
+    <div id="createAppModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus"></i> Create Application</h3>
+                <button class="close-btn" onclick="hideCreateAppModal()">&times;</button>
+            </div>
+            <form id="appForm">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label for="name">Application Name</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label for="dllUrl">DLL URL</label>
+                        <input type="url" id="dllUrl" name="dllUrl" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="status">Status</label>
+                        <select id="status" name="status">
+                            <option value="active">Active</option>
+                            <option value="disabled">Disabled</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideCreateAppModal()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createApp()">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="createUserModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-plus"></i> Create User</h3>
+                <button class="close-btn" onclick="hideCreateUserModal()">&times;</button>
+            </div>
+            <form id="userForm">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email">
+                    </div>
+                    <div class="input-group">
+                        <label for="role">Role</label>
+                        <select id="role" name="role">
+                            <option value="user">User</option>
+                            <option value="reseller">Reseller</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideCreateUserModal()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createUser()">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="generateKeyModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-key"></i> Generate License Key</h3>
+                <button class="close-btn" onclick="hideGenerateKeyModal()">&times;</button>
+            </div>
+            <form id="keyForm">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label for="keyAppId">Application</label>
+                        <select id="keyAppId" name="appId" required>
+                            <option value="">Select Application</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="duration">Duration (days)</label>
+                        <input type="number" id="duration" name="duration" min="1" max="365" value="30" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="maxActivations">Max Activations</label>
+                        <input type="number" id="maxActivations" name="maxActivations" min="1" max="100" value="1" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="note">Note (optional)</label>
+                        <input type="text" id="note" name="note" placeholder="Optional note for this key">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideGenerateKeyModal()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="generateKey()">Generate</button>
+                </div>
+            </form>
+            
+            <div id="keyResult" class="key-result hidden">
+                <h4>Key Generated Successfully!</h4>
+                <code id="generatedKey">ECLIPSE-XXXXXX-XXXXXX-XXXXXX</code>
+                <button class="btn btn-secondary" onclick="copyGeneratedKey()">
+                    <i class="fas fa-copy"></i> Copy Key
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script src="admin.js"></script>
 </body>
 </html>
