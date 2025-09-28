@@ -1,7 +1,7 @@
 {
-  "name": "eclipse-auth-panel",
-  "version": "3.0.0",
-  "description": "Advanced authentication system for Eclipse cheats",
+  "name": "eclipse-auth-system",
+  "version": "4.0.0",
+  "description": "Advanced multi-application authentication system",
   "type": "module",
   "main": "server.js",
   "scripts": {
@@ -10,15 +10,14 @@
   },
   "dependencies": {
     "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "jsonwebtoken": "^9.0.2",
     "bcryptjs": "^2.4.3",
-    "google-auth-library": "^9.0.0"
+    "jsonwebtoken": "^9.0.2",
+    "cors": "^2.8.5"
   },
   "keywords": [
     "authentication",
     "license",
-    "panel",
+    "multi-app",
     "eclipse"
   ],
   "author": "Eclipse Team",
